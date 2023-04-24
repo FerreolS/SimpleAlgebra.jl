@@ -1,0 +1,7 @@
+name = "SimpleAlgebra"
+uuid = "c653966b-d9be-4146-a61d-9a13ffa1fe75"
+authors = ["ferreol <ferreol.soulez@free.fr>"]
+version = "0.1.0"
+
+[deps]
+ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
