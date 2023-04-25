@@ -14,10 +14,6 @@ abstract type AbstractMap{T<:Number,I,O} end
 
 Base.eltype(::Type{<:AbstractMap{T,I,O}}) where {T,I,O} = T
 
-# function Base.convert(::Type{T}, obj::M) where {T<:Number,T2,M<:AbstractMap{T2}} 
-#     field_values = [convert.(T, getfield(obj, field)) for field in fieldnames(typeof(obj))]
-#     return M.name.wrapper(field_values...)
-# end
 
 function Base.convert(::Type{T}, obj::M) where {T<:Number,T2,M<:AbstractMap{T2}} 
    return M.name.wrapper{T}(obj)
@@ -30,10 +26,6 @@ end
 
  (A::AbstractMap)( v) = A*v
 function Base.:*(A::AbstractMap, v) 
-	#@assert size(v)==I "Input to apply was size $(size(v)), didn't match  $I sizein"
-	#T = promote_type(T1,T2)
-	#@assert T==T1 "Input of type $T2 cannot be promoted to type $T1"
-	#return apply(A, convert.(T,v))
 	
 	return apply(A, v )
 end 
@@ -65,9 +57,8 @@ function apply(A::AbstractMap,)
 
 end
 
-function apply_adjoint(A::AbstractMap, ) 
-	throw(SimpleAlgebraFailure("unimplemented operation `apply` for mapping $(typeof(A))"))
-
+function apply_jacobian(A::AbstractMap,args... ) 
+	throw(SimpleAlgebraFailure("unimplemented operation `apply_jacobian` for mapping $(typeof(A))"))
 end
 
 

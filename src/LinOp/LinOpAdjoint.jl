@@ -21,3 +21,9 @@ end
 function apply(A::LinOpAdjoint, v) 
 	return apply_adjoint(A.Op,v)
 end
+
+function apply_adjoint(A::LinOpAdjoint, v) 
+	return apply(A.Op,v)
+end
+
+# #@opt_out rrule(::typeof(apply), ::LinOpAdjoint,::Any)

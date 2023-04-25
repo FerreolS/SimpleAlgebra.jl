@@ -30,9 +30,8 @@ function apply(A::CostL2{T,I,D}, v) where {T,I,D}
 end
 
 
-#Zygote.@adjoint apply(A::CostL2, v::AbstractVector)  = apply(A,v), Δ ->( nothing, Δ .* (v .- A.data))
 function ChainRulesCore.rrule( ::typeof(apply),A::CostL2, v)
 	r = v .- A.data
-    ∂Y(Δy) = (NoTangent(),NoTangent(), r * Δy)
+    ∂Y(Δy) = (NoTangent(),NoTangent(), r .* Δy)
     return 0.5 * sum(abs2,r), ∂Y
 end

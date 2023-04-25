@@ -1,9 +1,12 @@
 
 abstract type AbstractLinOp{T,I,O}  <: AbstractMap{T,I,O}  end
 
+function apply_jacobian(A::AbstractLinOp,v,x) 
+	apply_adjoint(A,v)
+end
 
-function apply_adjoint(A::AbstractLinOp, ::AbstractVector) 
-	throw(SimpleAlgebraFailure("unimplemented operation `apply` for mapping $(typeof(A))"))
+function apply_adjoint(A::AbstractLinOp,) 
+	throw(SimpleAlgebraFailure("unimplemented operation `apply_adjoint` for mapping $(typeof(A))"))
 
 end
 
