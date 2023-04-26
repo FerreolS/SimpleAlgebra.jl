@@ -1,31 +1,29 @@
 
-struct CostL2{T,I,D<:Union{AbstractArray{T},T}} <:AbstractCost{T,I}
+struct CostL2{I,D<:Union{AbstractArray,Number}} <:AbstractCost{I}
 	data::D
 	#W::P{T}    # precision matrix   
 end
 
-CostL2(sz::NTuple,data::T) where {T<:Number}  =  CostL2(T,sz,data)
-function CostL2(::Type{T}, sz::NTuple,data::T1) where {T<:Number,T1<:Number}  
-	return CostL2{T,sz,T}(data)
+function CostL2(sz::NTuple,data::T1) where {T1<:Number}  
+	return CostL2{sz,T1}(data)
 end
 
 function CostL2(::Type{T}, data::D) where {T<:Number,T1<:Number,D<:AbstractArray{T1}}  
 	data = convert.(T, data)
-	return CostL2(T,data)
+	return CostL2(data)
 end
-function CostL2(::Type{T}, data::D) where {T<:Number,D<:AbstractArray{T}}  
+
+function CostL2(data::D) where {T<:Number,D<:AbstractArray{T}}  
 	sz = size(data)
-	return CostL2(T,sz,data)
+	return CostL2(sz,data)
 end
-function CostL2(::Type{T}, sz::NTuple,data::D) where {T<:Number,D<:AbstractArray{T}}  
+function CostL2(sz::NTuple,data::D) where {T<:Number,D<:AbstractArray{T}}  
 	@assert sz==size(data) "the data should be of size $sz"
-	return CostL2{T,sz,D}(data)
+	return CostL2{sz,D}(data)
 end
-CostL2(data::D) where {T<:Number,D<:AbstractArray{T}}  =  CostL2(T, data)
 
-CostL2{T}(obj::CostL2{T2,I,D}) where {T,T2,I,D} = CostL2(T,I,convert.(T,obj.data))
 
-function apply(A::CostL2{T,I,D}, v) where {T,I,D}
+function apply(A::CostL2{I,D}, v) where {I,D}
 	return 0.5 * sum(abs2,v .- A.data)
 end
 

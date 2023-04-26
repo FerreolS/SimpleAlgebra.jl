@@ -1,5 +1,5 @@
 
-abstract type AbstractLinOp{T,I,O}  <: AbstractMap{T,I,O}  end
+abstract type AbstractLinOp{I,O}  <: AbstractMap{I,O}  end
 
 function apply_jacobian(A::AbstractLinOp,v,x) 
 	apply_adjoint(A,v)
