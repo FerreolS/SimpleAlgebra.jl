@@ -1,6 +1,14 @@
-abstract type AbstractDomain{NTuple} end
+abstract type AbstractDomain{S} end
 
-struct CoordinateSpace{S} <: AbstractDomain{S} end
+struct CoordinateSpace{S} <: AbstractDomain{S}  end #EuclidianSpace?
 
-Base.size(::Type{<:AbstractDomain{S}}) where {S} = S
-Base.size(::AbstractDomain{S}) where {S} = S
+CoordinateSpace(sz::S) where {S<:NTuple} = CoordinateSpace{sz} 
+
+Base.size(::Type{<:CoordinateSpace{S}}) where {S} = S
+dimension(::Type{CoordinateSpace{S}}) where {S} = prod(S)
+
+Base.in(x::AbstractArray{T,N}, ::Type{S})  where {T,N,S<:CoordinateSpace} = size(S) == size(x)
+#in(x::AbstractArray{T,N},::Type{<:CoordinateSpace} )  where {T,N} = false
+Base.issubset(::Type{CoordinateSpace{S1}},::Type{CoordinateSpace{S2}}) where {S1,S2} = S1 ≤ S2
+Base.issubset(::Type{D},::Type{D}) where {D<:CoordinateSpace} = true
+Base.issubset(::Type{<:AbstractDomain},::Type{<:AbstractDomain}) = false

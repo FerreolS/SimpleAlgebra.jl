@@ -1,7 +1,11 @@
 
 abstract type AbstractMap{AbstractDomain,AbstractDomain} end
 
-dimension(::AbstractMap{I,O}) where {I,O} = (size(I),size(O))
+sizein(::AbstractMap{I,O}) where {I,O} = size(I)
+sizeout(::AbstractMap{I,O}) where {I,O} = size(O)
+spacein(::AbstractMap{I,O}) where {I,O} = I
+spaceout(::AbstractMap{I,O}) where {I,O} = O
+
 
 (A::AbstractMap)( v) = A*v
 
@@ -11,10 +15,6 @@ end
 
 Base.:*(A::AbstractMap, B::AbstractMap) = compose(A,B)
 
-# function compose(A::AbstractMap{M,O}, B::AbstractMap{I,M}) where {I,O,M}
-#  	T = promote_type(T1,T2)
-# 	compose(convert(T,A),convert(T,B))
-# end
 
 function compose(A::AbstractMap{M,O}, B::AbstractMap{I,N}) where {I,O,M,N}
 	throw(SimpleAlgebraFailure("Input size of first element $M does not match the output of the second element $N"))

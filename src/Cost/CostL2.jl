@@ -5,7 +5,7 @@ struct CostL2{I,D<:Union{AbstractArray,Number}} <:AbstractCost{I}
 end
 
 function CostL2(sz::NTuple,data::T1) where {T1<:Number}  
-	return CostL2{sz,T1}(data)
+	return CostL2{CoordinateSpace{sz},T1}(data)
 end
 
 function CostL2(::Type{T}, data::D) where {T<:Number,T1<:Number,D<:AbstractArray{T1}}  
@@ -19,7 +19,7 @@ function CostL2(data::D) where {T<:Number,D<:AbstractArray{T}}
 end
 function CostL2(sz::NTuple,data::D) where {T<:Number,D<:AbstractArray{T}}  
 	@assert sz==size(data) "the data should be of size $sz"
-	return CostL2{sz,D}(data)
+	return CostL2{CoordinateSpace{sz},D}(data)
 end
 
 

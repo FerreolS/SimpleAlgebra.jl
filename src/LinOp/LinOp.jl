@@ -1,6 +1,7 @@
 
 abstract type AbstractLinOp{I,O}  <: AbstractMap{I,O}  end
 
+
 function apply_jacobian(A::AbstractLinOp,v,x) 
 	apply_adjoint(A,v)
 end
