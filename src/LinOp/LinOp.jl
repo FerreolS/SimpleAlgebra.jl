@@ -1,19 +1,9 @@
 
 abstract type AbstractLinOp{I,O}  <: AbstractMap{I,O}  end
 
+apply_adjoint(A::AbstractLinOp,x) = apply_jacobian(A,zeros(eltype(x),inputsize(A)),x)
 
-function apply_adjoint(A::AbstractLinOp,x) 
-	apply_jacobian(A,zeros(eltype(x),sizein(A)),x)
-end
-
-
-
-function Base.adjoint(A::AbstractLinOp) 
-	return LinOpAdjoint(A)
-end
-
-
-
+Base.adjoint(A::AbstractLinOp) = LinOpAdjoint(A)
 
 include("./LinOpDiag.jl")
 include("./LinOpAdjoint.jl")
