@@ -8,13 +8,11 @@ spacein(::AbstractMap{I,O}) where {I,O} = I
 spaceout(::AbstractMap{I,O}) where {I,O} = O
 
 
-(A::AbstractMap)( v) = A*v
+(A::AbstractMap{I,O})( v)  where {I,O} = A*v
 
-function Base.:*(A::AbstractMap, v) 
-	return apply(A, v )
-end 
+Base.:*(A::AbstractMap{I,O}, v)  where {I,O} = apply(A, v ) 
 
-Base.:*(A::AbstractMap, B::AbstractMap) = compose(A,B)
+Base.:*(A::AbstractMap{M,O}, B::AbstractMap{I,N})  where {I,O,M,N} =  compose(A,B)
 
 
 function compose(A::AbstractMap{M,O}, B::AbstractMap{I,N}) where {I,O,M,N}
