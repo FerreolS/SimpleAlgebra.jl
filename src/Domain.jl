@@ -5,7 +5,7 @@ struct CoordinateSpace{S} <: AbstractDomain{S}  end #EuclidianSpace?
 CoordinateSpace(sz::S) where {S<:NTuple} = CoordinateSpace{sz} 
 
 Base.size(::Type{<:CoordinateSpace{S}}) where {S} = S
-dimension(::Type{CoordinateSpace{S}}) where {S} = prod(S)
+numel(::Type{CoordinateSpace{S}}) where {S} = prod(S)
 
 Base.in(x::AbstractArray{T,N}, ::Type{S})  where {T,N,S<:CoordinateSpace} = size(S) == size(x)
 Base.in(x::T, ::Type{S})  where {T,S<:CoordinateSpace} = size(S) == (1,)

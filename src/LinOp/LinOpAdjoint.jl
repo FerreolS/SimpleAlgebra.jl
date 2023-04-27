@@ -4,13 +4,12 @@ struct LinOpAdjoint{I,O,D<:AbstractLinOp} <:  AbstractLinOp{I,O}
 end
 
 function compose(A::LinOpAdjoint{I,O,D},B::D) where{I,O,D<:AbstractLinOp} 
-	if A.parent===B
-		return makeHtH(B)
-	else
-		throw(SimpleAlgebraFailure("unimplemented operation"))
-	end
+	A.parent===B && return makeHtH(B)
+	throw(SimpleAlgebraFailure("unimplemented operation"))
 end
 
 apply(A::LinOpAdjoint, v) = apply_adjoint(A.parent,v)
 
 apply_adjoint(A::LinOpAdjoint, v) = apply(A.parent,v)
+
+Base.adjoint(A::LinOpAdjoint) = A.parent	
