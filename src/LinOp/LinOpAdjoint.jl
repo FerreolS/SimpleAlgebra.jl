@@ -11,12 +11,6 @@ function compose(A::LinOpAdjoint{I,O,D},B::D) where{I,O,D<:AbstractLinOp}
 	end
 end
 
-function apply(A::LinOpAdjoint, v) 
-	return apply_adjoint(A.parent,v)
-end
+apply(A::LinOpAdjoint, v) = apply_adjoint(A.parent,v)
 
-function apply_adjoint(A::LinOpAdjoint, v) 
-	return apply(A.parent,v)
-end
-
-# #@opt_out rrule(::typeof(apply), ::LinOpAdjoint,::Any)
+apply_adjoint(A::LinOpAdjoint, v) = apply(A.parent,v)

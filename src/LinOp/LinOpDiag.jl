@@ -1,10 +1,9 @@
-struct LinOpDiag{I,D<:Union{AbstractArray,Number}} <:  AbstractLinOp{I,I}
+struct LinOpDiag{I,D<:AbstractArray} <:  AbstractLinOp{I,I}
 	diag::D
 end
 
-function LinOpDiag(::Type{T}, sz::NTuple,diag::T1) where {T<:Number,T1<:Number}  
-	return LinOpDiag{CoordinateSpace{sz},T}(diag)
-end
+LinOpDiag(::Type{T}, sz::NTuple,diag::T1) where {T<:Number,T1<:Number} = LinOpScale(T,sz,diag)
+LinOpDiag(sz::NTuple,diag::T) where {T<:Number} = LinOpScale(sz,diag)
 
 function LinOpDiag(::Type{T}, diag::D) where {T<:Number,T1<:Number,D<:AbstractArray{T1}}  
 	diag = convert.(T, diag)
@@ -21,22 +20,17 @@ function LinOpDiag(sz::NTuple,diag::D) where {T<:Number,D<:AbstractArray{T}}
 	return LinOpDiag{sz,D}(diag)
 end
 
-function apply(A::LinOpDiag{I,D}, v) where {I,D}
-	return v .* A.diag
-end
+apply(A::LinOpDiag{I,D}, v) where {I,D} = v .* A.diag
 
-apply_adjoint(A::LinOpDiag, v) =  v .* conj.(A.diag)
+apply_adjoint(A::LinOpDiag{I,D}, v) where {I,D} =  v .* conj.(A.diag)
 	
-
 makeHtH(obj::LinOpDiag{I,D}) where {I,D} = LinOpDiag{I,D}(abs2.(obj.diag))
 	
+compose(A::LinOpDiag{I,D1}, B::LinOpDiag{I,D2}) where {I,D1,D2} = LinOpDiag(A.diag  .* B.diag)
 
-function compose(A::LinOpDiag{I,D1}, B::LinOpDiag{I,D2}) where {I,D1,D2}
-	diag = A.diag  .* B.diag
-	return LinOpDiag{I,typeof(diag)}(diag)
-end
+compose(A::LinOpScale{I,T}, B::LinOpDiag{I,D}) where {I,T<:Number,D}  = LinOpDiag( size(I), A.scale * B.diag)
 
-
+# issue here should be generated only when apply_adjoint is implemented
 function ChainRulesCore.rrule( ::typeof(apply),A::AbstractLinOp, v)
     ∂Y(Δy) = (NoTangent(),NoTangent(), apply_adjoint(A,Δy))
     return apply(A,v), ∂Y
