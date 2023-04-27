@@ -10,6 +10,6 @@ showerror(io::IO, err::SimpleAlgebraFailure) =
 
 include("Domain.jl")
 include("Map.jl")
-include("Cost/Cost.jl")
 include("LinOp/LinOp.jl")
+include("Cost/Cost.jl")
 end # module SimpleAlgebra

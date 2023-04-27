@@ -2,14 +2,10 @@
 abstract type AbstractLinOp{I,O}  <: AbstractMap{I,O}  end
 
 
-function apply_jacobian(A::AbstractLinOp,v,x) 
-	apply_adjoint(A,v)
+function apply_adjoint(A::AbstractLinOp,x) 
+	apply_jacobian(A,zeros(eltype(x),sizein(A)),x)
 end
 
-function apply_adjoint(A::AbstractLinOp,) 
-	throw(SimpleAlgebraFailure("unimplemented operation `apply_adjoint` for mapping $(typeof(A))"))
-
-end
 
 
 function Base.adjoint(A::AbstractLinOp) 
@@ -17,10 +13,6 @@ function Base.adjoint(A::AbstractLinOp)
 end
 
 
-function ChainRulesCore.rrule( ::typeof(apply),A::AbstractLinOp, v)
-    ∂Y(Δy) = (NoTangent(),NoTangent(), apply_adjoint(A,Δy))
-    return apply(A,v), ∂Y
-end
 
 
 include("./LinOpDiag.jl")

@@ -39,3 +39,9 @@ function compose(A::LinOpDiag{I,D1}, B::LinOpDiag{I,D2}) where {I,D1,D2}
 	#diag = (.+)(promote.(A.diag,B.diag))
 	return LinOpDiag{I,typeof(diag)}(diag)
 end
+
+
+# function ChainRulesCore.rrule( ::typeof(apply),A::AbstractLinOp, v)
+#     ∂Y(Δy) = (NoTangent(),NoTangent(), apply_adjoint(A,Δy))
+#     return apply(A,v), ∂Y
+# end

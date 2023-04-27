@@ -1,11 +1,11 @@
 
-struct CostL2{I,D<:Union{AbstractArray,Number}} <:AbstractCost{I}
+struct CostL2{I,D<:Union{AbstractArray,Number}} <: AbstractCost{I}
 	data::D
 	#W::P{T}    # precision matrix   
 end
 
-function CostL2(sz::NTuple,data::T1) where {T1<:Number}  
-	return CostL2{CoordinateSpace{sz},T1}(data)
+function CostL2(sz::NTuple,data::T) where {T<:Number}  
+	return CostL2{CoordinateSpace{sz},T}(data)
 end
 
 function CostL2(::Type{T}, data::D) where {T<:Number,T1<:Number,D<:AbstractArray{T1}}  
@@ -13,11 +13,12 @@ function CostL2(::Type{T}, data::D) where {T<:Number,T1<:Number,D<:AbstractArray
 	return CostL2(data)
 end
 
-function CostL2(data::D) where {T<:Number,D<:AbstractArray{T}}  
+function CostL2(data::D) where {D<:AbstractArray}  
 	sz = size(data)
 	return CostL2(sz,data)
 end
-function CostL2(sz::NTuple,data::D) where {T<:Number,D<:AbstractArray{T}}  
+
+function CostL2(sz::NTuple,data::D) where {D<:AbstractArray}  
 	@assert sz==size(data) "the data should be of size $sz"
 	return CostL2{CoordinateSpace{sz},D}(data)
 end

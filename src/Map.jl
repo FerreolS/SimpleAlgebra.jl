@@ -1,4 +1,5 @@
 
+using Zygote: pullback
 abstract type AbstractMap{AbstractDomain,AbstractDomain} end
 
 sizein(::AbstractMap{I,O}) where {I,O} = size(I)
@@ -33,6 +34,7 @@ function apply(A::AbstractMap,)
 
 end
 
-function apply_jacobian(A::AbstractMap,args... ) 
-	throw(SimpleAlgebraFailure("unimplemented operation `apply_jacobian` for mapping $(typeof(A))"))
+function apply_jacobian(A::AbstractMap,v,x ) 
+	return pullback(x->A*x,v)[2](x)[1]
+#	throw(SimpleAlgebraFailure("unimplemented operation `apply_jacobian` for mapping $(typeof(A))"))
 end
