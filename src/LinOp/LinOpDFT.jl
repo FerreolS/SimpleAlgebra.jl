@@ -76,7 +76,7 @@ end
 
 function Flux.gpu(::Flux.FluxCUDAAdaptor,M::LinOpDFT{I,O,TI,TO,F,B}) where {I,O,TI,TO,F,B}
     temp = Array{TI}(undef, size(I)) |> gpu
-	T = eltype(temp)
+	T = ComplexF32
     # Compute the plans with suitable FFTW flags.  For maximum efficiency, the
     # transforms are always applied in-place and thus cannot preserve their
     # inputs.
