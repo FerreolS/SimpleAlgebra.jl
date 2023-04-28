@@ -18,9 +18,10 @@ include("Cost/Cost.jl")
 
 function Flux.gpu(::Flux.FluxCUDAAdaptor,M::AbstractMap) 
 	n = nfields(M)
+	n==0 && return M
 	Mfields = (getfield(M,i) for i ∈ 1:n)
 	Mfields = map(gpu,Mfields)
-	eval(nameof(typeof(M)))(Mfields...)
+	typeof(M)(Mfields...)
 end
 #Adapt.adapt(Flux.FluxCUDAAdaptor(),L1)
 

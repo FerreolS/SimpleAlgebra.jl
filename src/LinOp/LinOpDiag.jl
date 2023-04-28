@@ -1,6 +1,16 @@
 struct LinOpDiag{I,D<:AbstractArray} <:  AbstractLinOp{I,I}
 	diag::D
+	LinOpDiag{I,D}(diag::D) where {I,T,D<:AbstractArray{T}}  = new{I,D}(diag)
 end
+
+function LinOpDiag(diag::D) where {T<:Number,D<:AbstractArray{T}}  
+	sz = size(diag)
+	return LinOpDiag{CoordinateSpace{sz},D}(diag)
+end
+
+LinOpDiag{I,D1}(diag::D2) where {I,T1,T2,D1<:AbstractArray{T1},D2<:AbstractArray{T2}}  = LinOpDiag{I,D2}(diag)
+
+
 
 LinOpDiag(::Type{T}, sz::NTuple{N,Int},diag::T1) where {T<:Number,T1<:Number, N} = LinOpScale(T,sz,diag)
 LinOpDiag(sz::NTuple,diag::T) where {T<:Number} = LinOpScale(sz,diag)
