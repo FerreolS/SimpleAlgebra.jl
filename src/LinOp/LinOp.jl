@@ -45,7 +45,6 @@ apply_adjoint(A::LinOpScale{I,T}, x) where {I,T} =  conj(A.scale) * x
 makeHtH(A::LinOpScale{I,T}) where {I,T} = A
 
 compose(A::AbstractMap{I,O}, B::LinOpScale{I,T}) where {I,O,T} = compose(B,A)
-compose(::LinOpIdentity{I}, B ::AbstractMap{I, O}) where {I, O} = B
 Base.:*(scalar::T, A::AbstractMap{I,O}) where {I, O,T<:Number} = compose(LinOpScale( size(O), scalar), A)
 compose(A::LinOpScale{I,T}, B::LinOpScale{I,T1}) where {I,T<:Number,T1<:Number}  = LinOpScale( size(I), A.scale * B.scale)
 

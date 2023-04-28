@@ -1,6 +1,6 @@
 
 using Zygote: pullback
-abstract type AbstractMap{AbstractDomain,AbstractDomain} end
+abstract type AbstractMap{I<:AbstractDomain,O<:AbstractDomain} end
 
 inputsize(::AbstractMap{I,O}) where {I,O} = size(I)
 outputsize(::AbstractMap{I,O}) where {I,O} = size(O)
@@ -20,10 +20,6 @@ end
 
 # function compose(A::AbstractMap{M,O}, B::AbstractMap{I,M}) where {I,O,M}
 # 	throw(SimpleAlgebraFailure("unimplemented operation"))
-# end
-
-# function Base.adjoint(A::AbstractMap{I,O}) where {I,O}
-# 	throw(SimpleAlgebraFailure("unimplemented operation `adjoint` for mapping $(typeof(A))"))
 # end
 
 function apply_jacobian(A::AbstractMap{I,O},v,x )  where {I,O}

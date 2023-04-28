@@ -20,13 +20,13 @@ function LinOpDiag(sz::NTuple{N,Int},diag::D) where {T<:Number,D<:AbstractArray{
 	return LinOpDiag{sz,D}(diag)
 end
 
-apply(A::LinOpDiag{I,D}, v) where {I,D} = v .* A.diag
+apply(A::LinOpDiag{I,D}, v) where {I,D} = @. v * A.diag
 
-apply_adjoint(A::LinOpDiag{I,D}, v) where {I,D} =  v .* conj.(A.diag)
+apply_adjoint(A::LinOpDiag{I,D}, v) where {I,D} = @. v * conj(A.diag)
 	
-makeHtH(obj::LinOpDiag{I,D}) where {I,D} = LinOpDiag{I,D}(abs2.(obj.diag))
+makeHtH(obj::LinOpDiag{I,D}) where {I,D} = LinOpDiag{I,D}(@. abs2(obj.diag))
 	
-compose(A::LinOpDiag{I,D1}, B::LinOpDiag{I,D2}) where {I,D1,D2} = LinOpDiag(A.diag  .* B.diag)
+compose(A::LinOpDiag{I,D1}, B::LinOpDiag{I,D2}) where {I,D1,D2} = LinOpDiag(@. A.diag * B.diag)
 
 compose(A::LinOpScale{I,T}, B::LinOpDiag{I,D}) where {I,T<:Number,D}  = LinOpDiag( size(I), A.scale * B.diag)
 
