@@ -1,7 +1,6 @@
-import Flux: FluxCUDAAdaptor, gpu
-#using Flux
 
-function Flux.gpu(::Flux.FluxCUDAAdaptor,M::AbstractMap) 
+
+function Flux.gpu(M::AbstractMap) 
 	n = nfields(M)
 	n==0 && return M
 	Mfields = (getfield(M,i) for i ∈ 1:n)
@@ -10,7 +9,7 @@ function Flux.gpu(::Flux.FluxCUDAAdaptor,M::AbstractMap)
 end
 
 
-function Flux.gpu(::Flux.FluxCUDAAdaptor,M::LinOpDFT{I,O,TI,TO,F,B}) where {I,O,TI,TO,F,B}
+function Flux.gpu(M::LinOpDFT{I,O,TI,TO,F,B}) where {I,O,TI,TO,F,B}
     temp = Array{ComplexF32}(undef, size(I)) |> gpu
 	T = ComplexF32
     # Compute the plans with suitable FFTW flags.  For maximum efficiency, the

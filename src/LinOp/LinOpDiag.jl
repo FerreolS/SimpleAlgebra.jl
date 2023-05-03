@@ -20,11 +20,6 @@ function LinOpDiag(::Type{T}, diag::D) where {T<:Number,T1<:Number,D<:AbstractAr
 	return LinOpDiag(diag)
 end
 
-function LinOpDiag(diag::D) where {T<:Number,D<:AbstractArray{T}}  
-	sz = size(diag)
-	return LinOpDiag{CoordinateSpace{sz},D}(diag)
-end
-
 function LinOpDiag(sz::NTuple{N,Int},diag::D) where {T<:Number,D<:AbstractArray{T},N}  
 	@assert sz==size(diag) "the diagonal should be of size $sz"
 	return LinOpDiag{sz,D}(diag)
