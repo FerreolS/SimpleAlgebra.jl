@@ -80,8 +80,6 @@ end
 LinOpDFT(T::Type{<:fftwNumber}, dims::Integer...; kwds...) =
     LinOpDFT(T, dims; kwds...)
 # Constructor for transforms applicable to a given array.
-FFTOperator(A::DenseArray{T,N}; kwds...) where {T<:fftwNumber,N} =
-    FFTOperator(T, size(A); kwds...)
 
 apply(A::LinOpDFT{I,O,T,C,F,B}, v) where {I,O,T,C,F,B} = A.forward * v
 apply_adjoint(A::LinOpDFT{I,O,T,C,F,B}, v) where {I,O,T,C,F,B} = A.backward * v
@@ -126,7 +124,7 @@ yields the smallest integer which is greater or equal `len` and which is a
 multiple of powers of 2, 3 and/or 5.  If argument is an array dimesion list
 (i.e. a tuple of integers), a tuple of good FFT dimensions is returned.
 
-Also see: [`goodfftdims`](@ref), [`rfftdims`](@ref), [`FFTOperator`](@ref).
+Also see: [`goodfftdims`](@ref), [`rfftdims`](@ref).
 
 """
 goodfftdim(len::Integer) = goodfftdim(Int(len))
@@ -140,7 +138,7 @@ goodfftdims(dims)
 yields a list of dimensions suitable for computing the FFT of arrays whose
 dimensions are `dims` (a tuple or a vector of integers).
 
-Also see: [`goodfftdim`](@ref), [`rfftdims`](@ref), [`FFTOperator`](@ref).
+Also see: [`goodfftdim`](@ref), [`rfftdims`](@ref).
 
 """
 goodfftdims(dims::Integer...) = map(goodfftdim, dims)
@@ -155,7 +153,7 @@ rfftdims(dims)
 yields the dimensions of the complex array produced by a real-complex FFT of a
 real array of size `dims`.
 
-Also see: [`goodfftdim`](@ref), [`FFTOperator`](@ref).
+Also see: [`goodfftdim`](@ref).
 
 """
 rfftdims(dims::Integer...) = rfftdims(dims)
