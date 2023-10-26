@@ -1,3 +1,49 @@
+
+### IDENTITY
+struct LinOpIdentity{I} <:  AbstractLinOp{I,I} end
+
+LinOpIdentity(sz::NTuple{N,Int}) where {N} = LinOpIdentity{CoordinateSpace{sz}}()
+
+apply(::LinOpIdentity{I}, x) where {I} = x
+
+apply_adjoint(::LinOpIdentity{I}, x) where {I} =  x
+Base.adjoint(A::LinOpIdentity) = A	
+makeHtH(A::LinOpIdentity{I}) where {I} = A
+
+compose(A::AbstractMap{I,O}, ::LinOpIdentity{I}) where {I,O} = A
+compose(::LinOpIdentity{I},A::AbstractMap{I,O}) where {I,O} = A
+compose(A::SimpleAlgebra.LinOpIdentity{I}, ::SimpleAlgebra.LinOpIdentity{I}) where I =  A
+
+
+### SCALING 
+
+struct LinOpScale{I,T<:Number} <:  AbstractLinOp{I,I} 
+	scale::T
+end
+
+function LinOpScale(::Type{T}, sz::NTuple{N,Int}, scale::T1) where {T<:Number,T1<:Number,N}  
+	scale = convert(T, scale)
+	return LinOpScale(sz,scale)
+end
+
+function LinOpScale(sz::NTuple{N,Int}, scale::T) where {T<:Number,N}
+	scale==oneunit(scale) && return LinOpIdentity(sz)
+    LinOpScale{CoordinateSpace{sz},T}(scale)
+end
+
+apply(A::LinOpScale{I,T}, x) where {I,T} = A.scale * x
+
+apply_adjoint(A::LinOpScale{I,T}, x) where {I,T} =  conj(A.scale) * x
+	
+makeHtH(A::LinOpScale{I,T}) where {I,T} = A
+
+compose(A::AbstractLinOp{I,O}, B::LinOpScale{I,T}) where {I,O,T} = compose(B,A)
+Base.:*(scalar::T, A::AbstractMap{I,O}) where {I, O,T<:Number} = compose(LinOpScale( size(O), scalar), A)
+compose(A::LinOpScale{I,T}, B::LinOpScale{I,T1}) where {I,T<:Number,T1<:Number}  = LinOpScale( size(I), A.scale * B.scale)
+
+
+### DIAGONAL (element-wise multiplication) 
+
 struct LinOpDiag{I,D<:AbstractArray} <:  AbstractLinOp{I,I}
 	diag::D
 	LinOpDiag{I,D}(diag::D) where {I,T,D<:AbstractArray{T}}  = new{I,D}(diag)
@@ -34,9 +80,3 @@ makeHtH(obj::LinOpDiag{I,D}) where {I,D} = LinOpDiag{I,D}(@. abs2(obj.diag))
 compose(A::LinOpDiag{I,D1}, B::LinOpDiag{I,D2}) where {I,D1,D2} = LinOpDiag(@. A.diag * B.diag)
 
 compose(A::LinOpScale{I,T}, B::LinOpDiag{I,D}) where {I,T<:Number,D}  = LinOpDiag( size(I), A.scale * B.diag)
-
-# FIXME issue here should be generated only when apply_adjoint is implemented
-function ChainRulesCore.rrule( ::typeof(apply),A::AbstractLinOp, v)
-    ∂Y(Δy) = (NoTangent(),NoTangent(), apply_adjoint(A,Δy))
-    return apply(A,v), ∂Y
-end

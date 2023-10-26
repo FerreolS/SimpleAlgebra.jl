@@ -13,7 +13,7 @@ Base.:*(A::AbstractMap{I,O}, v)  where {I,O} = apply(A, v )
 
 Base.:*(A::AbstractMap{M,O}, B::AbstractMap{I,N})  where {I,O,M,N} =  compose(A,B)
 
-function compose(A::AbstractMap{M,O}, B::AbstractMap{I,N}) where {I,O,M,N}
+function compose(::AbstractMap{M,O}, ::AbstractMap{I,N}) where {I,O,M,N}
 	throw(SimpleAlgebraFailure("Input size of first element $M does not match the output of the second element $N"))
 end
 
