@@ -4,9 +4,9 @@ struct LinOpIdentity{I} <:  AbstractLinOp{I,I} end
 
 LinOpIdentity(sz::NTuple{N,Int}) where {N} = LinOpIdentity{CoordinateSpace{sz}}()
 
-apply(::LinOpIdentity{I}, x) where {I} = x
+apply_(::LinOpIdentity{I}, x) where {I} = x
 
-apply_adjoint(::LinOpIdentity{I}, x) where {I} =  x
+apply_adjoint_(::LinOpIdentity{I}, x) where {I} =  x
 Base.adjoint(A::LinOpIdentity) = A	
 makeHtH(A::LinOpIdentity{I}) where {I} = A
 
@@ -31,9 +31,9 @@ function LinOpScale(sz::NTuple{N,Int}, scale::T) where {T<:Number,N}
     LinOpScale{CoordinateSpace{sz},T}(scale)
 end
 
-apply(A::LinOpScale{I,T}, x) where {I,T} = A.scale * x
+apply_(A::LinOpScale{I,T}, x) where {I,T} = A.scale * x
 
-apply_adjoint(A::LinOpScale{I,T}, x) where {I,T} =  conj(A.scale) * x
+apply_adjoint_(A::LinOpScale{I,T}, x) where {I,T} =  conj(A.scale) * x
 	
 makeHtH(A::LinOpScale{I,T}) where {I,T} = A
 
@@ -71,9 +71,9 @@ function LinOpDiag(sz::NTuple{N,Int},diag::D) where {T<:Number,D<:AbstractArray{
 	return LinOpDiag{sz,D}(diag)
 end
 
-apply(A::LinOpDiag{I,D}, v) where {I,D} = @. v * A.diag
+apply_(A::LinOpDiag{I,D}, v) where {I,D} = @. v * A.diag
 
-apply_adjoint(A::LinOpDiag{I,D}, v) where {I,D} = @. v * conj(A.diag)
+apply_adjoint_(A::LinOpDiag{I,D}, v) where {I,D} = @. v * conj(A.diag)
 	
 makeHtH(obj::LinOpDiag{I,D}) where {I,D} = LinOpDiag{I,D}(@. abs2(obj.diag))
 	

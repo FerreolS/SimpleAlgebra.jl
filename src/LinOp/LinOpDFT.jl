@@ -81,8 +81,8 @@ LinOpDFT(T::Type{<:fftwNumber}, dims::Integer...; kwds...) =
     LinOpDFT(T, dims; kwds...)
 # Constructor for transforms applicable to a given array.
 
-apply(A::LinOpDFT{I,O,T,C,F,B}, v) where {I,O,T,C,F,B} = A.forward * v
-apply_adjoint(A::LinOpDFT{I,O,T,C,F,B}, v) where {I,O,T,C,F,B} = A.backward * v
+apply_(A::LinOpDFT, v)  = A.forward * v
+apply_adjoint_(A::LinOpDFT, v)  = A.backward * v
 makeHtH(::LinOpDFT{I,O,T,C,F,B}) where {I,O,T,C,F,B} = LinOpScale(size(I),numel(I))
 
 #------------------------------------------------------------------------------

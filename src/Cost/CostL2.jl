@@ -24,12 +24,12 @@ function CostL2(sz::NTuple,data::D) where {D<:AbstractArray}
 end
 
 
-function apply(A::CostL2{I,D}, v) where {I,D}
+function apply_(A::CostL2{I,D}, v) where {I,D}
 	return 0.5 * sum(abs2,v .- A.data)
 end
 
-
-function ChainRulesCore.rrule( ::typeof(apply),A::CostL2, v)
+# FIXME 
+function ChainRulesCore.rrule( ::typeof(apply_),A::CostL2, v)
 	r = v .- A.data
     ∂Y(Δy) = (NoTangent(),NoTangent(), r .* Δy)
     return 0.5 * sum(abs2,r), ∂Y
