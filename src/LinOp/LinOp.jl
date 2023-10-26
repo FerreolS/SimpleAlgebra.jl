@@ -5,6 +5,7 @@ apply_adjoint(A::AbstractLinOp,x) = apply_jacobian(A,zeros(eltype(x),inputsize(A
 
 Base.adjoint(A::AbstractLinOp) = LinOpAdjoint(A)
 
+compose(A::AbstractLinOp,B::AbstractLinOp) = LinOpComposition(A, B)
 
 # FIXME issue here should be generated only when apply_adjoint is implemented
 function ChainRulesCore.rrule( ::typeof(apply),A::AbstractLinOp, v)
@@ -12,6 +13,7 @@ function ChainRulesCore.rrule( ::typeof(apply),A::AbstractLinOp, v)
     return apply(A,v), ∂Y
 end
 
+include("./LinOpComposition.jl")
 include("./LinOpDiag.jl")
 include("./LinOpAdjoint.jl")
 include("./LinOpDFT.jl")
