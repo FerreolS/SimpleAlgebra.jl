@@ -28,7 +28,13 @@ function apply_(A::CostL2{I,D}, v) where {I,D}
 	return 0.5 * sum(abs2,v .- A.data)
 end
 
-# FIXME 
+#= function apply_jacobian_(A::CostL2, v, x)
+	r = v .- A.data
+	return r .* x
+end
+ =#
+
+ # FIXME 
 function ChainRulesCore.rrule( ::typeof(apply_),A::CostL2, v)
 	r = v .- A.data
     ∂Y(Δy) = (NoTangent(),NoTangent(), r .* Δy)

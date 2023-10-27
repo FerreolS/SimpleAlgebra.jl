@@ -27,8 +27,7 @@ function ChainRulesCore.rrule(config::RuleConfig{>:HasForwardsMode}, ::typeof(ap
     	∂Y(Δy) = (NoTangent(),NoTangent(), apply_adjoint_(A,Δy))
     	return apply(A,v), ∂Y
 	else
-		return nothing
-	#	ChainRulesCore.rrule_via_ad(config,apply_,A, v)
+		return ChainRulesCore.rrule_via_ad(config,apply_,A, v)
 	end
 end
 

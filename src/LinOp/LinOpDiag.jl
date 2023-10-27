@@ -73,7 +73,7 @@ end
 
 apply_(A::LinOpDiag{I,D}, v) where {I,D} = @. v * A.diag
 
-apply_adjoint_(A::LinOpDiag{I,D}, v) where {I,D} = @. v * conj(A.diag)
+#apply_adjoint_(A::LinOpDiag{I,D}, v) where {I,D} = @. v * conj(A.diag)
 	
 makeHtH(obj::LinOpDiag{I,D}) where {I,D} = LinOpDiag{I,D}(@. abs2(obj.diag))
 	
