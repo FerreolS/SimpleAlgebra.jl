@@ -9,6 +9,7 @@ function apply_adjoint(A::AbstractLinOp{I,O},x) where {I,O}
 		return apply_jacobian(A,zeros(eltype(x),inputsize(A)),x)
 	end
 end
+function apply_adjoint_ end
 
 # apply_jacobian(A::AbstractLinOp{I,O}, _,x) where {I,O} = apply_adjoint(A,x) 
 # apply_adjoint(A,x::AbstractLinOp)  = apply_jacobian(A,zeros(eltype(x),inputsize(A)),x)

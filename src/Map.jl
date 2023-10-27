@@ -17,6 +17,7 @@ function apply(A::AbstractMap{I,O}, v) where {I,O}
 	@assert v ∈ I "The input size must be  $(size(I))"
 	apply_(A, v)
 end
+function apply_ end
 
 function apply_jacobian(A::AbstractMap{I,O}, v,x) where {I,O}
 	@assert v ∈ I "The size of the second parameter must be  $(size(I))"
