@@ -24,10 +24,10 @@ function apply_jacobian(A::AbstractMap{I,O}, v,x) where {I,O}
 	apply_jacobian_(A, v, x)
 end
 
-
+#= 
 function apply_jacobian_(A::AbstractMap,_,_ )  
 	throw(SimpleAlgebraFailure("unimplemented operation `apply_jacobian_` for mapping $(typeof(A))"))
-end
+end =#
 
 
 function compose(::AbstractMap{M,O}, ::AbstractMap{I,N}) where {I,O,M,N}

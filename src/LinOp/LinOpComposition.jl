@@ -5,8 +5,8 @@ struct LinOpComposition{I,O,D1<:AbstractLinOp,D2<:AbstractLinOp} <:  AbstractLin
 		    return new{O,I,D1,D2}(A,B)
 	end
 end
-apply_(A::LinOpComposition, v) = apply_(A.left,apply_(A.right,v))
+apply_(A::LinOpComposition, v) = apply(A.left,apply(A.right,v))
 
-apply_adjoint_(A::LinOpComposition, v) = apply_adjoint_(A.right,apply_adjoint_(A.left,v))
+apply_adjoint_(A::LinOpComposition, v) = apply_adjoint(A.right,apply_adjoint(A.left,v))
 
 Base.adjoint(A::LinOpComposition)  = A.right' * A.left'

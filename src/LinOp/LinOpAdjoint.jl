@@ -9,8 +9,8 @@ function compose(A::LinOpAdjoint{I,O,D},B::D) where{I,O,D<:AbstractLinOp}
 	return LinOpComposition(A,B)
 end
 
-apply_(A::LinOpAdjoint, v) = apply_adjoint_(A.parent,v)
+apply_(A::LinOpAdjoint, v) = apply_adjoint(A.parent,v)
 
-apply_adjoint_(A::LinOpAdjoint, v) = apply_(A.parent,v)
+apply_adjoint_(A::LinOpAdjoint, v) = apply(A.parent,v)
 
 Base.adjoint(A::LinOpAdjoint) = A.parent	

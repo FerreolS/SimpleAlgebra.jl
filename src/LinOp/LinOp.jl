@@ -3,10 +3,15 @@ abstract type AbstractLinOp{I,O}  <: AbstractMap{I,O}  end
 
 function apply_adjoint(A::AbstractLinOp{I,O},x) where {I,O}
 	@assert x ∈ O "The size of input parameter must be $(size(O))"
-	apply_adjoint_(A,x) 
+	if applicable(apply_adjoint_,A,x) 
+		return apply_adjoint_(A,x) 
+	else
+		return apply_jacobian(A,zeros(eltype(x),inputsize(A)),x)
+	end
 end
 
-apply_adjoint_(A,x)  = apply_jacobian_(A,zeros(eltype(x),inputsize(A)),x)
+# apply_jacobian(A::AbstractLinOp{I,O}, _,x) where {I,O} = apply_adjoint(A,x) 
+# apply_adjoint(A,x::AbstractLinOp)  = apply_jacobian(A,zeros(eltype(x),inputsize(A)),x)
 
 Base.adjoint(A::AbstractLinOp) = LinOpAdjoint(A)
 
@@ -15,6 +20,18 @@ compose(A::AbstractLinOp,B::AbstractLinOp) = LinOpComposition(A, B)
 function makeHtH(A::AbstractLinOp)
     throw(SimpleAlgebraFailure("unimplemented operation `makeHtH` for linear operator $(typeof(A))"))
 end
+
+# FIXME issue here should be generated only when apply_adjoint is implemented
+function ChainRulesCore.rrule(config::RuleConfig{>:HasForwardsMode}, ::typeof(apply),A::AbstractLinOp, v)
+	if applicable(apply_adjoint_,A,v)
+    	∂Y(Δy) = (NoTangent(),NoTangent(), apply_adjoint_(A,Δy))
+    	return apply(A,v), ∂Y
+	else
+		return nothing
+	#	ChainRulesCore.rrule_via_ad(config,apply_,A, v)
+	end
+end
+
 
 include("./LinOpComposition.jl")
 include("./LinOpDiag.jl")
