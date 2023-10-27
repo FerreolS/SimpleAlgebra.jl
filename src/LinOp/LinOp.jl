@@ -14,9 +14,6 @@ function apply_adjoint_ end
 # apply_jacobian(A::AbstractLinOp{I,O}, _,x) where {I,O} = apply_adjoint(A,x) 
 # apply_adjoint(A,x::AbstractLinOp)  = apply_jacobian(A,zeros(eltype(x),inputsize(A)),x)
 
-Base.adjoint(A::AbstractLinOp) = LinOpAdjoint(A)
-
-compose(A::AbstractLinOp,B::AbstractLinOp) = LinOpComposition(A, B)
 
 function makeHtH(A::AbstractLinOp)
     throw(SimpleAlgebraFailure("unimplemented operation `makeHtH` for linear operator $(typeof(A))"))
@@ -33,8 +30,7 @@ function ChainRulesCore.rrule(config::RuleConfig{>:HasForwardsMode}, ::typeof(ap
 end
 
 
-include("./LinOpComposition.jl")
+include("./OperationsOnLinOp.jl")
 include("./LinOpDiag.jl")
-include("./LinOpAdjoint.jl")
 include("./LinOpDFT.jl")
 include("./LinOpConv.jl")
