@@ -19,6 +19,7 @@ compose(A::SimpleAlgebra.LinOpIdentity{I}, ::SimpleAlgebra.LinOpIdentity{I}) whe
 
 struct LinOpScale{I,T<:Number} <:  AbstractLinOp{I,I} 
 	scale::T
+#	LinOpScale{I,T}(diag::T) where {I,T}  = new{I,T}(diag)
 end
 
 function LinOpScale(::Type{T}, sz::NTuple{N,Int}, scale::T1) where {T<:Number,T1<:Number,N}  
@@ -55,7 +56,7 @@ function LinOpDiag(diag::D) where {T<:Number,D<:AbstractArray{T}}
 end
 
 LinOpDiag{I,D1}(diag::D2) where {I,T1,T2,D1<:AbstractArray{T1},D2<:AbstractArray{T2}}  = LinOpDiag{I,D2}(diag)
-
+LinOpDiag{I,I}(diag::D) where {I<:AbstractDomain,T<:Number,D<:AbstractArray{T}} = LinOpDiag{I,D}(diag)
 
 
 LinOpDiag(::Type{T}, sz::NTuple{N,Int},diag::T1) where {T<:Number,T1<:Number, N} = LinOpScale(T,sz,diag)
