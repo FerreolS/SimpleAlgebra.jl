@@ -2,9 +2,8 @@
 
 Base.adjoint(A::AbstractLinOp) = LinOpAdjoint(A)
 
-
 compose(A::AbstractLinOp,B::AbstractLinOp) = LinOpComposition(A, B)
-sum(A::AbstractLinOp,B::AbstractLinOp) = LinOpSum(A, B)
+Base.sum(A::AbstractLinOp,B::AbstractLinOp) = LinOpSum(A, B)
 
 ### ADJOINT ###
 

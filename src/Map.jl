@@ -1,4 +1,3 @@
-
 abstract type AbstractMap{I<:AbstractDomain,O<:AbstractDomain} end
 
 inputsize(::AbstractMap{I,O}) where {I,O} = size(I)
@@ -6,12 +5,14 @@ outputsize(::AbstractMap{I,O}) where {I,O} = size(O)
 inputspace(::AbstractMap{I,O}) where {I,O} = I
 outputspace(::AbstractMap{I,O}) where {I,O} = O
 
-
 (A::AbstractMap)( v)   = A*v
+#(A::Type{<:AbstractMap})(I::TI,O::TO,x...)  where {TI<:AbstractDomain,TO<:AbstractDomain} = A{I,O}(x...)
 
 Base.:*(A::AbstractMap, v)  = apply(A, v ) 
 
 Base.:*(A::AbstractMap, B::AbstractMap)   =  compose(A,B)
+
+Base.:+(A::AbstractMap, B::AbstractMap)   =  Base.sum((A,B))
 
 function apply(A::AbstractMap{I,O}, v) where {I,O}
 	@assert v ∈ I "The input size must be  $(size(I))"
