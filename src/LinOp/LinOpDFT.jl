@@ -7,19 +7,22 @@ const PLANNING = (FFTW.ESTIMATE | FFTW.MEASURE | FFTW.PATIENT |
                   FFTW.EXHAUSTIVE | FFTW.WISDOM_ONLY)
 
 
-struct LinOpDFT{I,O,T<:fftwNumber,  # element type of input
-					C<:fftwComplex, # element type of output
-					F<:Plan{T},     # type of forward plan
-					B<:Plan{C}      # type of backward plan
+struct LinOpDFT{I,O,
+					F<:Plan,     # type of forward plan
+					B<:Plan,      # type of backward plan
 				} <:  AbstractLinOp{I,O}
-
+    inputspace::I
+    outputspace::O
     forward::F             # plan for forward transform
     backward::B            # plan for backward transform
+    LinOpDFT(inputspace::I, outputspace::O, forward::F, backward::B) where {I,O,F,B} = new{I,O,F,B}(inputspace,outputspace,forward,backward)
 	# unitary::Bool ?
 end
 
+LinOpDFT(dims::NTuple;kwds...) = LinOpDFT(ComplexF64,dims; kwds...)
+
 # Real-to-complex FFT.
-function LinOpDFT(	::Type{T},
+function LinOpDFT(::Type{T},
                 	dims::NTuple{N,Int};
                     timelimit::Real = FFTW.NO_TIMELIMIT,
                     flags::Integer = FFTW.MEASURE) where {T<:fftwReal,N}
@@ -35,16 +38,17 @@ function LinOpDFT(	::Type{T},
     forward = plan_rfft(Array{T}(undef, dims);
                         flags = (planning | FFTW.PRESERVE_INPUT),
                         timelimit = timelimit)
-	I = CoordinateSpace{forward.sz}
-	O = CoordinateSpace{forward.osz}
-    backward = plan_brfft(Array{Complex{T}}(undef, size(O)), dims[1];
+    backward = plan_brfft(Array{Complex{T}}(undef, forward.osz), dims[1];
                           flags = (planning | FFTW.DESTROY_INPUT),
                           timelimit = timelimit)
 
     # Build operator.
+
+	inputspace = CoordinateSpace(T,forward.sz)
+	outputspace = CoordinateSpace(Complex{T},forward.osz)
     F = typeof(forward)
     B = typeof(backward)
-    return LinOpDFT{I,O,T,Complex{T},F,B}(forward, backward)
+    return LinOpDFT(inputspace, outputspace, forward, backward)
 end
 
 
@@ -67,11 +71,12 @@ function LinOpDFT(::Type{T},
                           timelimit = timelimit)
 
     # Build operator.
-	I = CoordinateSpace{forward.sz}
-	O = CoordinateSpace{forward.osz}
+
+	inputspace = CoordinateSpace(T,forward.sz)
+	outputspace = CoordinateSpace(T,forward.osz)
     F = typeof(forward)
     B = typeof(backward)
-    return LinOpDFT{I,O,T,T,F,B}(forward, backward)
+    return LinOpDFT(inputspace, outputspace, forward, backward)
 end
 
 
@@ -83,7 +88,7 @@ LinOpDFT(T::Type{<:fftwNumber}, dims::Integer...; kwds...) =
 
 apply_(A::LinOpDFT, v)  = A.forward * v
 apply_adjoint_(A::LinOpDFT, v)  = A.backward * v
-makeHtH(::LinOpDFT{I,O,T,C,F,B}) where {I,O,T,C,F,B} = LinOpScale(size(I),numel(I))
+makeHtH(::LinOpDFT{I,O,F,B}) where {I,O,F,B} = LinOpScale(size(I),numel(I))
 
 #------------------------------------------------------------------------------
 # Utilities borrowed from LazyAlgebra
