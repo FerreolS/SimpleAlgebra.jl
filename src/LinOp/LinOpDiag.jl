@@ -1,8 +1,13 @@
 
 ### IDENTITY
-struct LinOpIdentity{I} <:  AbstractLinOp{I,I} end
+struct LinOpIdentity{I} <:  AbstractLinOp{I,I} 
+	inputspace::I
+end
 
-LinOpIdentity(sz::NTuple{N,Int}) where {N} = LinOpIdentity{CoordinateSpace{sz}}()
+LinOpIdentity(sz::NTuple{N,Int}) where {N} = LinOpIdentity(CoordinateSpace(sz))
+LinOpIdentity(sz::Int) = LinOpIdentity(Tuple(sz))
+LinOpIdentity(inputspace::I) where {I<:AbstractDomain} = LinOpIdentity{I}(inputspace) 
+
 
 apply_(::LinOpIdentity{I}, x) where {I} = x
 
@@ -10,74 +15,103 @@ apply_adjoint_(::LinOpIdentity{I}, x) where {I} =  x
 Base.adjoint(A::LinOpIdentity) = A	
 makeHtH(A::LinOpIdentity{I}) where {I} = A
 
-compose(A::AbstractMap{I,O}, ::LinOpIdentity{I}) where {I,O} = A
-compose(::LinOpIdentity{I},A::AbstractMap{I,O}) where {I,O} = A
-compose(A::SimpleAlgebra.LinOpIdentity{I}, ::SimpleAlgebra.LinOpIdentity{I}) where I =  A
+# FIXME should we be restrictive about the size?
+compose(A::AbstractMap, ::LinOpIdentity)  = A
+compose(A::AbstractLinOp, ::LinOpIdentity)  = A
+compose(::LinOpIdentity,A::AbstractMap) = A
+compose(A::LinOpIdentity, ::LinOpIdentity)  =  A
 
 
 ### SCALING 
 
-struct LinOpScale{I,T<:Number} <:  AbstractLinOp{I,I} 
+struct LinOpScale{I<:CoordinateSpace,O<:CoordinateSpace,T} <:  AbstractLinOp{I,O} 
+	inputspace::I
+	outputspace::O
 	scale::T
-#	LinOpScale{I,T}(diag::T) where {I,T}  = new{I,T}(diag)
+	LinOpScale(inputspace::I,outputspace::O, scale::T) where {I<:CoordinateSpace,O<:CoordinateSpace,T} =  new{I,O,T}(inputspace,outputspace,scale)
 end
 
-function LinOpScale(::Type{T}, sz::NTuple{N,Int}, scale::T1) where {T<:Number,T1<:Number,N}  
-	scale = convert(T, scale)
-	return LinOpScale(sz,scale)
+function LinOpScale(::Type{TI}, sz::NTuple{N,Int}, scale::T1) where {TI,T1,N}  
+	if T1==TI
+		scale==oneunit(scale) && return LinOpIdentity(sz)
+	end
+	inputspace = CoordinateSpace(TI,sz)
+	TO = isconcretetype(TI) ? typeof(oneunit(TI) * oneunit(T1)) : TI
+	outputspace = CoordinateSpace(TO,sz)
+	return LinOpScale(inputspace,outputspace, scale)
 end
+LinOpScale(::Type{T},sz::Int, scale) where {T} = LinOpScale(T,Tuple(sz),scale)
 
 function LinOpScale(sz::NTuple{N,Int}, scale::T) where {T<:Number,N}
 	scale==oneunit(scale) && return LinOpIdentity(sz)
-    LinOpScale{CoordinateSpace{sz},T}(scale)
+	inputspace = CoordinateSpace(Number,sz)
+	outputspace = CoordinateSpace(Number,sz)
+    LinOpScale(inputspace,outputspace, scale)
+end
+LinOpScale(sz::Int, scale) = LinOpScale(Tuple(sz),scale)
+LinOpScale(scale) = LinOpScale((), scale)
+
+apply_(A::LinOpScale, x)  = A.scale * x
+
+apply_adjoint_(A::LinOpScale, x) =  conj(A.scale) * x
+
+function makeHtH(A::LinOpScale{I,O,T}) where {I,O,T}
+	TI = eltype(I)
+    LinOpScale(TI, inputsize(A), abs2(A.scale))
 end
 
-apply_(A::LinOpScale{I,T}, x) where {I,T} = A.scale * x
-
-apply_adjoint_(A::LinOpScale{I,T}, x) where {I,T} =  conj(A.scale) * x
-	
-makeHtH(A::LinOpScale{I,T}) where {I,T} = A
-
-compose(A::AbstractLinOp{I,O}, B::LinOpScale{I,T}) where {I,O,T} = compose(B,A)
-Base.:*(scalar::T, A::AbstractMap{I,O}) where {I, O,T<:Number} = compose(LinOpScale( size(O), scalar), A)
-compose(A::LinOpScale{I,T}, B::LinOpScale{I,T1}) where {I,T<:Number,T1<:Number}  = LinOpScale( size(I), A.scale * B.scale)
+compose(A::AbstractLinOp{I,O}, B::LinOpScale{I,T}) where {I,O,T} = compose(LinOpScale( outputsize(A), B.scale),A)
+Base.:*(scalar::T, A::AbstractMap{I,O}) where {I, O,T<:Number} = compose(LinOpScale( outputsize(A), scalar), A)
+compose(A::LinOpScale{I,T}, B::LinOpScale{I,T1}) where {I,T<:Number,T1<:Number}  = LinOpScale( inputsize(A), A.scale * B.scale)
 
 
 ### DIAGONAL (element-wise multiplication) 
 
-struct LinOpDiag{I,D<:AbstractArray} <:  AbstractLinOp{I,I}
+struct LinOpDiag{I<:CoordinateSpace,O<:CoordinateSpace,D<:AbstractArray} <:  AbstractLinOp{I,O}
+	inputspace::I
+	outputspace::O
 	diag::D
-	LinOpDiag{I,D}(diag::D) where {I,T,D<:AbstractArray{T}}  = new{I,D}(diag)
+	LinOpDiag(inputspace::I,outputspace::O, diag::D) where {I<:CoordinateSpace,O<:CoordinateSpace,D<:AbstractArray} =  new{I,O,D}(inputspace,outputspace,diag)
 end
 
-function LinOpDiag(diag::D) where {T<:Number,D<:AbstractArray{T}}  
+
+function LinOpDiag(::Type{TI}, diag::AbstractArray{T1}) where {TI,T1}  
 	sz = size(diag)
-	return LinOpDiag{CoordinateSpace{sz},D}(diag)
+	inputspace = CoordinateSpace(TI,sz)
+	TO = isconcretetype(TI) ? typeof(oneunit(TI) * oneunit(T1)) : TI
+	outputspace = CoordinateSpace(TO,sz)
+	return LinOpDiag(inputspace,outputspace, diag)
 end
 
-LinOpDiag{I,D1}(diag::D2) where {I,T1,T2,D1<:AbstractArray{T1},D2<:AbstractArray{T2}}  = LinOpDiag{I,D2}(diag)
-LinOpDiag{I,I}(diag::D) where {I<:AbstractDomain,T<:Number,D<:AbstractArray{T}} = LinOpDiag{I,D}(diag)
+LinOpDiag(scale::Number)  = LinOpScale(scale)
 
+
+
+
+function LinOpDiag(diag::D) where {D<:AbstractArray}  
+	sz = size(diag)
+	inputspace = CoordinateSpace(sz)
+	outputspace = CoordinateSpace(sz)
+	return LinOpDiag(inputspace,outputspace, diag)
+end
 
 LinOpDiag(::Type{T}, sz::NTuple{N,Int},diag::T1) where {T<:Number,T1<:Number, N} = LinOpScale(T,sz,diag)
 LinOpDiag(sz::NTuple,diag::T) where {T<:Number} = LinOpScale(sz,diag)
 
-function LinOpDiag(::Type{T}, diag::D) where {T<:Number,T1<:Number,D<:AbstractArray{T1}}  
-	diag = convert.(T, diag)
+function LinOpDiag(sz::NTuple{N,Int},diag::D) where {T<:Number,D<:AbstractArray{T},N}  
+	@assert sz==size(diag) "the diagonal should be of size $sz"
 	return LinOpDiag(diag)
 end
 
-function LinOpDiag(sz::NTuple{N,Int},diag::D) where {T<:Number,D<:AbstractArray{T},N}  
-	@assert sz==size(diag) "the diagonal should be of size $sz"
-	return LinOpDiag{sz,D}(diag)
+apply_(A::LinOpDiag, v)  = @. v * A.diag
+
+apply_adjoint_(A::LinOpDiag, v)  = @. v * conj(A.diag)
+	
+function makeHtH(obj::LinOpDiag{I,O,T}) where {I,O,T}
+	TI = eltype(I)
+    LinOpDiag(TI, @. abs2(obj.diag))
 end
-
-apply_(A::LinOpDiag{I,D}, v) where {I,D} = @. v * A.diag
-
-apply_adjoint_(A::LinOpDiag{I,D}, v) where {I,D} = @. v * conj(A.diag)
 	
-makeHtH(obj::LinOpDiag{I,D}) where {I,D} = LinOpDiag{I,D}(@. abs2(obj.diag))
-	
-compose(A::LinOpDiag{I,D1}, B::LinOpDiag{I,D2}) where {I,D1,D2} = LinOpDiag(@. A.diag * B.diag)
+compose(A::LinOpDiag{I,I,D1}, B::LinOpDiag{I,I,D2}) where {I,D1,D2} = LinOpDiag(@. A.diag * B.diag)
 
-compose(A::LinOpScale{I,T}, B::LinOpDiag{I,D}) where {I,T<:Number,D}  = LinOpDiag( size(I), A.scale * B.diag)
+compose(A::LinOpScale{I,I,T}, B::LinOpDiag{I,I,D}) where {I,T<:Number,D}  = LinOpDiag( size(I), A.scale * B.diag)
