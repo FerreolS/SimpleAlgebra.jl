@@ -2,6 +2,8 @@ module SimpleAlgebra
 
 using ChainRulesCore
 using Requires
+using Functors
+
 struct SimpleAlgebraFailure <: Exception
     msg::String
 end

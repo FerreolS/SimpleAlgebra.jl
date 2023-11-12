@@ -4,10 +4,14 @@ struct LinOpIdentity{I} <:  AbstractLinOp{I,I}
 	inputspace::I
 end
 
-LinOpIdentity(sz::NTuple{N,Int}) where {N} = LinOpIdentity(CoordinateSpace(sz))
+@functor LinOpIdentity
+
+outputspace(A::LinOpIdentity) = A.inputspace
+
+
+LinOpIdentity(sz::NTuple) = LinOpIdentity(CoordinateSpace(sz))
 LinOpIdentity(sz::Int) = LinOpIdentity(Tuple(sz))
 LinOpIdentity(inputspace::I) where {I<:AbstractDomain} = LinOpIdentity{I}(inputspace) 
-
 
 apply_(::LinOpIdentity{I}, x) where {I} = x
 
@@ -30,6 +34,8 @@ struct LinOpScale{I<:CoordinateSpace,O<:CoordinateSpace,T} <:  AbstractLinOp{I,O
 	scale::T
 	LinOpScale(inputspace::I,outputspace::O, scale::T) where {I<:CoordinateSpace,O<:CoordinateSpace,T} =  new{I,O,T}(inputspace,outputspace,scale)
 end
+
+@functor LinOpScale
 
 function LinOpScale(::Type{TI}, sz::NTuple{N,Int}, scale::T1) where {TI,T1,N}  
 	if T1==TI
@@ -74,6 +80,7 @@ struct LinOpDiag{I<:CoordinateSpace,O<:CoordinateSpace,D<:AbstractArray} <:  Abs
 	LinOpDiag(inputspace::I,outputspace::O, diag::D) where {I<:CoordinateSpace,O<:CoordinateSpace,D<:AbstractArray} =  new{I,O,D}(inputspace,outputspace,diag)
 end
 
+@functor LinOpDiag
 
 function LinOpDiag(::Type{TI}, diag::AbstractArray{T1}) where {TI,T1}  
 	sz = size(diag)

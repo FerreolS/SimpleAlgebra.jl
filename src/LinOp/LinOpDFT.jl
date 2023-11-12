@@ -19,6 +19,8 @@ struct LinOpDFT{I,O,
 	# unitary::Bool ?
 end
 
+@functor LinOpDFT
+
 LinOpDFT(dims::NTuple;kwds...) = LinOpDFT(ComplexF64,dims; kwds...)
 
 # Real-to-complex FFT.

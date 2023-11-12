@@ -12,6 +12,8 @@ struct LinOpAdjoint{I,O,D<:AbstractLinOp} <:  AbstractLinOp{I,O}
 	LinOpAdjoint(A::AbstractLinOp{O,I}) where {I,O}   = new{O,I,typeof(A)}(A)
 end
 
+@functor LinOpAdjoint
+
 LinOpAdjoint(A::LinOpAdjoint) = A.parent
 
 inputspace(A::LinOpAdjoint)  = outputspace(A.parent)
@@ -41,6 +43,9 @@ struct LinOpComposition{I,O,D1<:AbstractLinOp,D2<:AbstractLinOp} <:  AbstractLin
 		    return new{O,I,D1,D2}(A,B)
 	end
 end
+
+@functor LinOpComposition
+
 apply_(A::LinOpComposition, v) = apply(A.left,apply(A.right,v))
 
 apply_adjoint_(A::LinOpComposition, v) = apply_adjoint(A.right,apply_adjoint(A.left,v))
@@ -57,6 +62,9 @@ struct LinOpSum{I,O,D1<:AbstractLinOp{I,O},D2<:AbstractLinOp{I,O}} <:  AbstractL
 		    return new{O,I,D1,D2}(A,B)
 	end
 end
+
+@functor LinOpSum
+
 apply_(A::LinOpSum, x) = apply(A.left,x) .+ apply(A.right,x)
 
 apply_adjoint_(A::LinOpSum, v) = apply_adjoint(A.right,v) .+ apply_adjoint(A.left,v)

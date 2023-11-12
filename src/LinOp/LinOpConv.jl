@@ -3,6 +3,8 @@ struct LinOpConv{I,D<:LinOpDiag,FT<:LinOpDFT} <:  AbstractLinOp{I,I}
 	F::FT	# Fourier operator
 end
 
+@functor LinOpConv
+
 function  LinOpConv(mtf::AbstractArray)
 	M = LinOpDiag(mtf) 
 	sz = size(mtf)

@@ -7,6 +7,8 @@ struct CostL2{I,D<:Union{AbstractArray,Number}} <: AbstractCost{I}
 	CostL2(inputspace::I, data::D) where {I<:CoordinateSpace,D<:AbstractArray} =  new{I,D}(inputspace,data)
 end
 
+@functor CostL2
+
 
 function CostL2(::Type{T}, data::D) where {T<:Number,T1<:Number,D<:AbstractArray{T1}}  
 	data = convert.(T, data)
@@ -18,7 +20,6 @@ function CostL2(data::D) where {D<:AbstractArray}
 	inputspace = CoordinateSpace(sz)
 	return CostL2(inputspace, data)
 end
-
 
 
 function apply_(A::CostL2{I,D}, v) where {I,D}
