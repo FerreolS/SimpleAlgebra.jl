@@ -26,11 +26,10 @@ function apply_(A::CostL2{I,D}, v) where {I,D}
 	return sum(abs2,v .- A.data)/2
 end
 
-#= function apply_jacobian_(A::CostL2, v, x)
-	r = v .- A.data
-	return r .* x
+function apply_jacobian_(A::CostL2, v, x)
+	return @. x * (v - A.data)
 end
- =#
+ 
 
  # FIXME 
 function ChainRulesCore.rrule( ::typeof(apply_),A::CostL2, v)
