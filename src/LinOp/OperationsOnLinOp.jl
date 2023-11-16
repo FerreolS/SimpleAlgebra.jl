@@ -36,15 +36,20 @@ Base.adjoint(A::LinOpAdjoint) = A.parent
 
 ### COMPOSITION ###
 
-struct LinOpComposition{I,O,D1<:AbstractLinOp,D2<:AbstractLinOp} <:  AbstractLinOp{I,O}
-	left::D1
-	right::D2
-	function LinOpComposition(A::D1, B::D2) where {I,O,IO, D1<:AbstractLinOp{IO,O},  D2<:AbstractLinOp{I,IO}} 
-		    return new{O,I,D1,D2}(A,B)
+struct LinOpComposition{I,O,Dleft<:AbstractLinOp,Dright<:AbstractLinOp} <:  AbstractLinOp{I,O}
+	left::Dleft
+	right::Dright
+	function LinOpComposition(A::Dleft, B::Dright) where {I1,O1, I2, O2,Dleft<:AbstractLinOp{I1,O1},  Dright<:AbstractLinOp{I2,O2}} 
+		    return new{I2,O1, Dleft,Dright}(A,B)
 	end
 end
 
 @functor LinOpComposition
+
+
+inputspace(A::LinOpComposition)  = inputspace(A.right)
+outputspace(A::LinOpComposition) = outputspace(A.left)
+
 
 apply_(A::LinOpComposition, v) = apply(A.left,apply(A.right,v))
 

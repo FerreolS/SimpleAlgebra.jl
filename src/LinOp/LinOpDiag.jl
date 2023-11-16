@@ -21,9 +21,7 @@ makeHtH(A::LinOpIdentity{I}) where {I} = A
 
 # FIXME should we be restrictive about the size?
 compose(A::AbstractMap, ::LinOpIdentity)  = A
-compose(A::AbstractLinOp, ::LinOpIdentity)  = A
 compose(::LinOpIdentity,A::AbstractMap) = A
-compose(A::LinOpIdentity, ::LinOpIdentity)  =  A
 
 
 ### SCALING 
