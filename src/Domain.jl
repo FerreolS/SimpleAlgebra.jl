@@ -1,11 +1,11 @@
 abstract type AbstractDomain end
+#Adapt.adapt_storage(::Type, x::AbstractDomain) = x
 
 struct CoordinateSpace{T,N} <: AbstractDomain
 	eltype::Type
 	size::NTuple{N,Int}
 	#CoordinateSpace{T,N}()
 end #EuclidianSpace?
-
 
 const AbstractCoordinateSpace{N} =  CoordinateSpace{T,N} where T
 
@@ -24,9 +24,12 @@ Base.size(sp::AbstractCoordinateSpace{N}, d) where {N} = d::Integer <= N ? size(
 
 Base.length(sp::S) where{S<:CoordinateSpace} = prod(sp.size)
 Base.ndims(::CoordinateSpace{T,N}) where {T,N} = N
+Base.ndims(::Type{CoordinateSpace{T,N}}) where {T,N} = N
 Base.eltype(::CoordinateSpace{T,N}) where {T,N} = T
+Base.eltype(::Type{CoordinateSpace{T,N}}) where {T,N} = T
 
-Base.in(x::AbstractArray{T,N}, sp::CoordinateSpace{TS,N})  where {T,TS,N} = (size(sp) == size(x)) && (T<:TS)
+Base.in(x::AbstractArray{T,N}, sp::CoordinateSpace{TS,N})  where {TS,T<:TS,N} = (size(sp) == size(x))
+Base.in(x::AbstractArray{T,N}, sp::CoordinateSpace{TS,N})  where {T<:AbstractFloat,TS<:Complex{T},N} = (size(sp) == size(x))
 Base.in(::AbstractArray, ::CoordinateSpace)   = false
 Base.in(::T, ::CoordinateSpace{TS,0})  where {TS,T} = T<:TS
 Base.in(::T, ::CoordinateSpace)  where T = false
@@ -35,3 +38,8 @@ Base.in(::T, ::CoordinateSpace)  where T = false
 Base.issubset(::Type{D},::Type{D}) where {D<:AbstractDomain} = true
 Base.issubset(::Type{<:AbstractDomain},::Type{<:AbstractDomain}) = false
  =#
+
+ Base.zeros(sp::CoordinateSpace{T,N}) where {T,N} = zeros(T,size(sp))
+ Base.ones(sp::CoordinateSpace{T,N}) where {T,N} = zeros(T,size(sp))
+ Base.zeros(::Type{T},sp::CoordinateSpace{N}) where {T,N} = zeros(T,size(sp))
+ Base.ones(::Type{T},sp::CoordinateSpace{N}) where {T,N} = zeros(T,size(sp))
