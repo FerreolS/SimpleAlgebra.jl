@@ -2,6 +2,7 @@
 import AbstractFFTs: Plan, fftshift, ifftshift
 using FFTW
 import FFTW: fftwNumber, fftwReal, fftwComplex, FFTWPlan, cFFTWPlan, rFFTWPlan
+import Adapt: adapt_storage
 # All planning flags.
 const PLANNING = (FFTW.ESTIMATE | FFTW.MEASURE | FFTW.PATIENT |
                   FFTW.EXHAUSTIVE | FFTW.WISDOM_ONLY)
@@ -91,6 +92,12 @@ LinOpDFT(T::Type{<:fftwNumber}, dims::Integer...; kwds...) =
 apply_(A::LinOpDFT, v)  = A.forward * v
 apply_adjoint_(A::LinOpDFT, v)  = A.backward * v
 makeHtH(::LinOpDFT{I,O,F,B}) where {I,O,F,B} = LinOpScale(size(I),numel(I))
+
+function ChainRulesCore.rrule( ::typeof(apply_),A::LinOpDFT, v)
+    LinOpDFT_pullback(Δy) = (NoTangent(),NoTangent(), apply_adjoint_(A, Δy))
+    return  apply_(A,v), LinOpDFT_pullback
+end
+
 
 #------------------------------------------------------------------------------
 # Utilities borrowed from LazyAlgebra
