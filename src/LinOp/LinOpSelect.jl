@@ -1,37 +1,53 @@
-struct LinOpSelect{I<:CoordinateSpace,O<:CoordinateSpace,T,N} <:  AbstractLinOp{I,O} 
+struct LinOpSelect{N,I<:AbstractCoordinateSpace{N},O<:CoordinateSpace,D<:Union{(AbstractArray{T,N} where T),Number}} <:  AbstractLinOp{I,O} 
 	inputspace::I
 	outputspace::O
 	index::Vector{CartesianIndex{N}}
-	LinOpSelect(inputspace::I,outputspace::O, list::T,N::Int) where {I<:CoordinateSpace,O<:CoordinateSpace,T} =  new{I,O,T,N}(inputspace,outputspace,list)
-	LinOpSelect(inputspace::I,outputspace::O, list::T) where {I<:CoordinateSpace,O<:CoordinateSpace,T} =  new{I,O,T,ndims(inputspace)}(inputspace,outputspace,list)
-
+	zeroarray::D
+	LinOpSelect(inputspace::I,outputspace::O, list::Vector{CartesianIndex{N}},zeroarray::D) where {T,N,I<:AbstractCoordinateSpace{N},O<:CoordinateSpace,D<:Union{AbstractArray{T,N},T}} =  new{N,I,O,D}(inputspace,outputspace,list,zeroarray)
+	#LinOpSelect(::Type{T},inputspace::I,outputspace::O, list::Vector{CartesianIndex{N}},zeroarray::D) where {T<:Number,N,I<:AbstractCoordinateSpace{N},O<:CoordinateSpace,D<:Union{AbstractArray{T,N},T}} =  new{T,N,I,O,D}(inputspace,outputspace,list)
 end
 
-function LinOpSelect(::Type{T},sz::NTuple{N,Int}, list::Vector{CartesianIndex{N}}) where {N,T}
+function LinOpSelect(::Type{T},sz::NTuple{N,Int},list::Vector{CartesianIndex{N}}) where {N,T}
 	inputspace  = CoordinateSpace(T,sz)
 	outputspace = CoordinateSpace(T,length(list))
-	LinOpSelect(inputspace,outputspace, list)
+	if isconcretetype(T)
+		zeroarray = zeros(T,sz)
+	else
+		zeroarray = T(0)
+	end
+	LinOpSelect(inputspace,outputspace, list,zeroarray)
 end
 
 LinOpSelect(sz::NTuple{N,Int}, list::Vector{CartesianIndex{N}}) where {N} = LinOpSelect(Number,sz,list)
+
 function LinOpSelect(::Type{T},selected::BitArray) where T
 	sz = size(selected)
 	list = findall(selected)
 	LinOpSelect(T,sz,list)
 end
+
+
 LinOpSelect(selected::BitArray) =LinOpSelect(Number,selected::BitArray) 
 
 @functor LinOpSelect
 
-apply_(A::LinOpSelect, x)  = x[A.index] #view(x,A.index) 
+apply_(A::LinOpSelect, x)  =  x[A.index] #view(x,A.index) 
 
-function apply_adjoint_(A::LinOpSelect, x)
-	tmp = zeros(eltype(x),inputspace(A))
-	view(tmp,A.index) .= x
+function apply_adjoint_(A::LinOpSelect{N,I,O,D}, x) where {N,I,O,D<:Number}
+	tmp = zeros(eltype(x),inputspace(A))	
+	ChainRulesCore.@ignore_derivatives	view(tmp,A.index) .= x
 	return tmp
 end
 
-function makeHtH(A::LinOpSelect) 
+function apply_adjoint_(A::LinOpSelect{N,I,O,D}, x) where {N,I,O,D<:AbstractArray}
+	T = eltype(O)
+	tmp = A.zeroarray 
+	ChainRulesCore.@ignore_derivatives	view(tmp,A.index) .= T.(x)
+	return tmp
+end
+
+
+function compose(A::LinOpSelect) 
 	sz = inputsize(A)
 	return LinOpIdentity(sz)
 end
@@ -43,3 +59,13 @@ function compose(left::B, right::C)  where {N,I,O,D,C<:LinOpSelect{N,I,O,D},B<:L
 	end
 	return LinOpComposition(left,right)
 end
+
+function ChainRulesCore.rrule( ::typeof(apply_),A::LinOpSelect, v)
+    LinOpSelect_pullback(Δy) = (NoTangent(),NoTangent(), apply_adjoint_(A, Δy))
+    return  apply_(A,v), LinOpSelect_pullback
+end
+
+function ChainRulesCore.rrule( ::typeof(apply_adjoint_),A::LinOpSelect, v)
+    LinOpSelect_pullback(Δy) = (NoTangent(),NoTangent(), apply_(A, Δy))
+    return  apply_adjoint_(A,v), LinOpSelect_pullback
+end 
