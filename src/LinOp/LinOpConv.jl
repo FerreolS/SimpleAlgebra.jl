@@ -1,33 +1,34 @@
 struct LinOpConv{I,D<:LinOpDiag,FT<:LinOpDFT} <:  AbstractLinOp{I,I}
+    inputspace::I
 	M::D 	# Transfer function (LinOpDiag)
 	F::FT	# Fourier operator
+	LinOpConv(insp::I, M::D,F::FT) where {I<:AbstractDomain,D<:LinOpDiag,FT<:LinOpDFT} = new{I,D,FT}(insp,M,F)
 end
 
 @functor LinOpConv
 
-function  LinOpConv(mtf::AbstractArray)
+outputspace(A::LinOpConv) = A.inputspace
+
+function  LinOpConv(mtf::AbstractArray{T}) where {T}
 	M = LinOpDiag(mtf) 
 	sz = size(mtf)
-	F = LinOpDFT(ComplexF64,sz)
+	F = LinOpDFT(T,sz)
 
     # Build operator.
-    D = typeof(M)
-    FT = typeof(F)
-	I = inputspace(F)
-	return LinOpConv{I,D,FT}(M,F)
+	insp = inputspace(F)
+	return LinOpConv(insp,M,F)
 end
 
 
-function  LinOpConv(::Val{:psf},psf::AbstractArray{T}) where{T<:Number}
+function  LinOpConv(::Val{:psf},psf::AbstractArray{T}; centered = true) where{T<:Number}
 	sz = size(psf)
 	F = LinOpDFT(T,sz)
+	if !centered 
+		psf = fftshift(psf)
+	end
 	M =  LinOpDiag(F*psf) 
-
-    # Build operator.
-    D = typeof(M)
-    FT = typeof(F)
-	I = inputspace(F)
-	return LinOpConv{I,D,FT}(M,F)
+	insp = inputspace(F)
+	return LinOpConv(insp,M,F)
 end
 
 function apply_(A::LinOpConv, x)
