@@ -1,8 +1,8 @@
 
 
-function apply_jacobian(A::AbstractMap{I,O}, v,x) where {I,O}
-	@assert v ∈ I "The size of the second parameter must be  $(size(I))"
-	@assert x ∈ O "The size of the third parameter must be $(size(O))"
+function apply_jacobian(A::AbstractMap, v,x) 
+	#@assert v ∈ I "The size of the second parameter must be  $(size(I))"
+	#@assert x ∈ O "The size of the third parameter must be $(size(O))"
 	if applicable(apply_jacobian_,A,v,x)
 		return apply_jacobian_(A,v,x)
 	else
