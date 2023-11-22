@@ -20,7 +20,6 @@ struct LinOpDFT{I,O,
 	# unitary::Bool ?
 end
 
-@functor LinOpDFT
 
 LinOpDFT(dims::NTuple;kwds...) = LinOpDFT(ComplexF64,dims; kwds...)
 
@@ -104,6 +103,39 @@ function ChainRulesCore.rrule( ::typeof(apply_),A::LinOpDFT, v)
     return  apply_(A,v), LinOpDFT_pullback
 end
 
+
+function Adapt.adapt_storage(::Type{T}, x::LinOpDFT) where {T<:fftwNumber}
+    dims = inputsize(x)
+    planning = planning = check_flags(FFTW.MEASURE)
+    timelimit = FFTW.NO_TIMELIMIT
+    # Compute the plans with suitable FFTW flags.  For maximum efficiency, the
+    # transforms are always applied in-place and thus cannot preserve their
+    # inputs.
+    
+    if T<: fftwReal
+        forward = plan_rfft(Array{T}(undef, dims);
+                        flags = (planning | FFTW.PRESERVE_INPUT),
+                        timelimit = timelimit)
+
+        backward = plan_brfft(Array{Complex{T}}(undef, forward.osz), dims[1];
+                          flags = (planning | FFTW.DESTROY_INPUT),
+                          timelimit = timelimit)
+    else
+        temp = Array{T}(undef, dims)
+        forward = plan_fft!(temp; flags = (planning | FFTW.DESTROY_INPUT),
+                        timelimit = timelimit)
+        backward = plan_bfft!(temp; flags = (planning | FFTW.DESTROY_INPUT),
+                          timelimit = timelimit)
+    end
+
+
+    # Build operator.
+
+	inputspace = CoordinateSpace(T,forward.sz)
+	outputspace = CoordinateSpace(T,forward.osz)
+    return LinOpDFT(inputspace, outputspace, forward, backward)
+
+end
 
 #------------------------------------------------------------------------------
 # Utilities borrowed from LazyAlgebra
