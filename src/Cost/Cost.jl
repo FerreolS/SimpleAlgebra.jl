@@ -23,7 +23,7 @@ end
  =#																
 compose(A::AbstractCost, B::AbstractMap) = CostComposition(A, B) 
 
-compose(::AbstractCost, AbstractMap) 	= throw(SimpleAlgebraFailure("Input size of first element $M does not match the output of the second element $N"))
+compose(::AbstractCost{O}, ::AbstractMap{I,O}) where {I,O} 	= throw(SimpleAlgebraFailure("The output of the Map does not match the input of the cost"))
 
 inputspace(A::CostComposition)  = inputspace(A.right)
 
