@@ -103,6 +103,11 @@ function ChainRulesCore.rrule( ::typeof(apply_),A::LinOpDFT, v)
     return  apply_(A,v), LinOpDFT_pullback
 end
 
+function ChainRulesCore.rrule( ::typeof(apply_adjoint_),A::LinOpDFT, v)
+    LinOpDFT_pullback(Δy) = (NoTangent(),NoTangent(), apply_(A, Δy))
+    return  apply_adjoint_(A,v), LinOpDFT_pullback
+end
+
 
 function Adapt.adapt_storage(::Type{T}, x::LinOpDFT) where {T<:fftwNumber}
     dims = inputsize(x)
