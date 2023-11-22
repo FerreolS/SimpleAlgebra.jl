@@ -9,7 +9,7 @@ Base.sum(A::AbstractLinOp,B::AbstractLinOp) = LinOpSum(A, B)
 
 struct LinOpAdjoint{I,O,D<:AbstractLinOp} <:  AbstractLinOp{I,O}
 	parent::D
-	LinOpAdjoint(A::AbstractLinOp{O,I}) where {I,O}   = new{O,I,typeof(A)}(A)
+	LinOpAdjoint(A::AbstractLinOp{O,I}) where {I,O}   = new{I,O,typeof(A)}(A)
 end
 
 @functor LinOpAdjoint
