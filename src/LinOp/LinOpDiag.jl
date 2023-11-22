@@ -17,7 +17,6 @@ apply_(::LinOpIdentity{I}, x) where {I} = x
 
 apply_adjoint_(::LinOpIdentity{I}, x) where {I} =  x
 Base.adjoint(A::LinOpIdentity) = A	
-makeHtH(A::LinOpIdentity{I}) where {I} = A
 
 # FIXME should we be restrictive about the size?
 compose(A::AbstractMap, ::LinOpIdentity)  = A
@@ -59,9 +58,14 @@ apply_(A::LinOpScale, x)  = A.scale * x
 
 apply_adjoint_(A::LinOpScale, x) =  conj(A.scale) * x
 
-function makeHtH(A::LinOpScale{I,O,T}) where {I,O,T}
-	TI = eltype(I)
-    LinOpScale(TI, inputsize(A), abs2(A.scale))
+
+LinOpAdjoint(A::LinOpScale) =   LinOpScale(outputspace(A),inputspace(A), conj(A.scale))
+
+function compose(left::LinOpScale{I,O,Tl},right::LinOpScale{O,P,Tr}) where {I,O,P,Tr,Tl}
+	insp = inputspace(right) 
+	T = (isconcretetype(Tr) || isconcretetype(Tl)) ? typeof(oneunit(Tl) * oneunit(Tr)) : Tr
+	outsp = CoordinateSpace(T,outputspace(left) )
+    LinOpScale(insp, outsp,left.scale .* right.scale)
 end
 
 compose(A::AbstractLinOp{I,O}, B::LinOpScale{I,T}) where {I,O,T} = compose(LinOpScale( outputsize(A), B.scale),A)
@@ -111,11 +115,6 @@ end
 apply_(A::LinOpDiag, v)  = @. v * A.diag
 
 apply_adjoint_(A::LinOpDiag, v)  = @. v * conj(A.diag)
-	
-function makeHtH(obj::LinOpDiag{I,O,T}) where {I,O,T}
-	TI = eltype(I)
-    LinOpDiag(TI, @. abs2(obj.diag))
-end
 	
 compose(A::LinOpDiag{I,I,D1}, B::LinOpDiag{I,I,D2}) where {I,D1,D2} = LinOpDiag(@. A.diag * B.diag)
 

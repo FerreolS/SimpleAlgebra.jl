@@ -91,7 +91,13 @@ LinOpDFT(T::Type{<:fftwNumber}, dims::Integer...; kwds...) =
 
 apply_(A::LinOpDFT, v)  = A.forward * v
 apply_adjoint_(A::LinOpDFT, v)  = A.backward * v
-makeHtH(::LinOpDFT{I,O,F,B}) where {I,O,F,B} = LinOpScale(size(I),numel(I))
+
+function compose(left::D, right::C)  where {I,O,F,B,C<:LinOpDFT{I,O,F,B},D<:LinOpAdjoint{O,I,C}} 
+    if left.parent===right
+		return LinOpScale(inputsize(right),length(inputspace(right)))
+	end
+	return LinOpComposition(left,right)
+end
 
 function ChainRulesCore.rrule( ::typeof(apply_),A::LinOpDFT, v)
     LinOpDFT_pullback(Δy) = (NoTangent(),NoTangent(), apply_adjoint_(A, Δy))

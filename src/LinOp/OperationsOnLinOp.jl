@@ -20,13 +20,6 @@ inputspace(A::LinOpAdjoint)  = outputspace(A.parent)
 outputspace(A::LinOpAdjoint) = inputspace(A.parent)
 
 
-
-function compose(A::LinOpAdjoint{I,O,D},B::D) where{I,O,D<:AbstractLinOp} 
-	A.parent===B && return makeHtH(B)
-	#throw(SimpleAlgebraFailure("unimplemented operation"))
-	return LinOpComposition(A,B)
-end
-
 apply_(A::LinOpAdjoint, v) = apply_adjoint(A.parent,v)
 
 apply_adjoint_(A::LinOpAdjoint, v) = apply(A.parent,v)

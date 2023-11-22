@@ -15,9 +15,6 @@ apply_jacobian(A::AbstractLinOp{I,O}, _,x) where {I,O} = apply_adjoint(A,x)
 # apply_adjoint(A,x::AbstractLinOp)  = apply_jacobian(A,zeros(eltype(x),inputsize(A)),x)
 
 
-function makeHtH(A::AbstractLinOp)
-    throw(SimpleAlgebraFailure("unimplemented operation `makeHtH` for linear operator $(typeof(A))"))
-end
 
 # FIXME issue here should be generated only when apply_adjoint is implemented
 function ChainRulesCore.rrule(config::RuleConfig{>:HasForwardsMode}, ::typeof(apply),A::AbstractLinOp, v)

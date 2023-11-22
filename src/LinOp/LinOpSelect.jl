@@ -35,3 +35,11 @@ function makeHtH(A::LinOpSelect)
 	sz = inputsize(A)
 	return LinOpIdentity(sz)
 end
+
+
+function compose(left::B, right::C)  where {N,I,O,D,C<:LinOpSelect{N,I,O,D},B<:LinOpAdjoint{O,I,C}} 
+    if left.parent===right
+		return LinOpIdentity(inputspace(left))
+	end
+	return LinOpComposition(left,right)
+end

@@ -42,3 +42,11 @@ function apply_adjoint_(A::LinOpConv, x)
 end
 
 expand(A::LinOpConv) = A.F' * A.M * A.F
+
+function compose(A::LinOpAdjoint{I,O,P}, B::LinOpConv)  where {I,O,P<:LinOpConv}
+    if A===B
+		modulus = abs2.(B.M.diag)
+		return LinOpConv(inputspace(B),LinOpDiag(modulus),B.F)
+	end
+	return LinOpComposition(A,B)
+end
