@@ -15,6 +15,7 @@ CoordinateSpace(sz::NTuple) = CoordinateSpace(Number,sz)
 CoordinateSpace(T::Type,sz::Int) = CoordinateSpace(T,Tuple(sz)) 
 CoordinateSpace(T::Type,sz::NTuple{N}) where { N} = CoordinateSpace{T,N}(T,sz)
 CoordinateSpace{T,0}() where T = CoordinateSpace(T,()) 
+CoordinateSpace(::Type{T},sp::CoordinateSpace) where T = CoordinateSpace(T,sp.size)
 
 const Scalar{T} = CoordinateSpace{T,0} where T
 Scalar() = Scalar{Number}()
