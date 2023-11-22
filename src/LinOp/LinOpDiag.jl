@@ -19,8 +19,11 @@ apply_adjoint_(::LinOpIdentity{I}, x) where {I} =  x
 Base.adjoint(A::LinOpIdentity) = A	
 
 # FIXME should we be restrictive about the size?
+compose(::LinOpIdentity,A::LinOpIdentity)  = A
 compose(A::AbstractMap, ::LinOpIdentity)  = A
+compose(A::AbstractLinOp, ::LinOpIdentity)  = A
 compose(::LinOpIdentity,A::AbstractMap) = A
+compose(::LinOpIdentity,A::AbstractLinOp) = A
 
 
 ### SCALING 
