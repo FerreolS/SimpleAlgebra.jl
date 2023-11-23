@@ -20,8 +20,6 @@ Base.:*(A::AbstractMap, v)  = apply(A, v )
 
 Base.:*(A::AbstractMap, B::AbstractMap)   =  compose(A,B)
 
-Base.:+(A::AbstractMap, B::AbstractMap)   =  Base.sum((A,B))
-
 function apply(A::AbstractMap{I,O}, v) where {I,O}
 	#@assert v ∈ inputspace(A) "The input size must belong to the space $(inputspace(A))"
 	apply_(A, v)
@@ -42,7 +40,7 @@ function apply_jacobian_ end
 
 
 function compose(::AbstractMap, ::AbstractMap) 
-	throw(SimpleAlgebraFailure("Input size of first element $M does not match the output of the second element $N"))
+	throw(SimpleAlgebraFailure("Input of first element does not match the output of the second element"))
 end
 
 # FIXME

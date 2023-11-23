@@ -25,6 +25,11 @@ compose(A::AbstractLinOp, ::LinOpIdentity)  = A
 compose(::LinOpIdentity,A::AbstractMap) = A
 compose(::LinOpIdentity,A::AbstractLinOp) = A
 
+function add(A::LinOpIdentity, B::LinOpIdentity)  
+	sp =inputspace(A)
+	T = promote_type(eltype(sp),eltype(inputspace(B)))
+	return LinOpScale(sp,sp, T.(2))
+end
 
 ### SCALING 
 
@@ -76,6 +81,14 @@ Base.:*(scalar::T, A::AbstractMap{I,O}) where {I, O,T<:Number} = compose(LinOpSc
 compose(A::LinOpScale{I,T}, B::LinOpScale{I,T1}) where {I,T<:Number,T1<:Number}  = LinOpScale( inputsize(A), A.scale * B.scale)
 
 
+function add(A::LinOpScale{I,O,T} , ::LinOpIdentity) where {I,O,T}
+	return LinOpScale(inputspace(A),outputspace(A), A.scale + oneunit(T) )
+end
+add( B::LinOpIdentity,A::LinOpScale)  = add(A,B)
+
+add(A::LinOpScale , B::LinOpScale)  = LinOpScale(inputspace(A),outputspace(A), A.scale + B.scale )
+
+
 ### DIAGONAL (element-wise multiplication) 
 
 struct LinOpDiag{I<:CoordinateSpace,O<:CoordinateSpace,D<:AbstractArray} <:  AbstractLinOp{I,O}
@@ -119,6 +132,18 @@ apply_(A::LinOpDiag, v)  = @. v * A.diag
 
 apply_adjoint_(A::LinOpDiag, v)  = @. v * conj(A.diag)
 	
-compose(A::LinOpDiag{I,I,D1}, B::LinOpDiag{I,I,D2}) where {I,D1,D2} = LinOpDiag(@. A.diag * B.diag)
+compose(A::LinOpDiag, B::LinOpDiag)  = LinOpDiag(inputspace(A),outputspace(B),@. A.diag * B.diag)
 
-compose(A::LinOpScale{I,I,T}, B::LinOpDiag{I,I,D}) where {I,T<:Number,D}  = LinOpDiag( size(I), A.scale * B.diag)
+compose(A::LinOpScale, B::LinOpDiag)  = LinOpDiag(inputspace(A),outputspace(B),@. A.scale * B.diag)
+compose(A::LinOpDiag, B::LinOpScale)  = LinOpDiag(inputspace(A),outputspace(B),@. A.diag * B.scale)
+
+add(A::LinOpDiag{I,O,D1}, B::LinOpDiag{I,O,D2})   where {I,O,D1,D2} = LinOpDiag(inputspace(A),outputspace(A),@. A.diag + B.diag)
+add(A::LinOpDiag{I,O,D1}, B::LinOpScale{I,O,D2})   where {I,O,D1,D2} = LinOpDiag(inputspace(A),outputspace(A),@. A.diag + B.scale)
+add(A::LinOpScale, B::LinOpDiag)  = add(B,A)
+add(A::LinOpDiag{I,O,D1}, ::LinOpIdentity{I})   where {N,T,I,O,D1<:AbstractArray{T,N}} = LinOpDiag(inputspace(A),outputspace(A),A.diag .+ oneunit(T))
+add(A::LinOpIdentity,B::LinOpDiag)  = add(B,A)
+
+add(A::LinOpDiag, B::Number) = LinOpDiag(inputspace(A),outputspace(A),A.diag .+ B)
+add(B::Number,A::LinOpDiag) = add(A,B)
+add(A::LinOpDiag{I,O,D1}, B::AbstractArray{T,N})   where {T,N,I,O,D1<:AbstractArray{T,N}} = LinOpDiag(inputspace(A),outputspace(A),@. A.diag + B)
+add(B::AbstractArray,A::LinOpDiag) = add(A,B)
