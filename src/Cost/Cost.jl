@@ -1,7 +1,6 @@
 
 abstract type AbstractCost{I}  <: AbstractMap{I,Scalar{Real}}  end
 
-outputspace(::AbstractCost) = Scalar{Real}()
 
 
 																
@@ -14,6 +13,8 @@ struct CostComposition{I,Left<:AbstractCost,Right<:AbstractMap} <:  AbstractCost
 end
 @functor CostComposition
 
+outputspace(::AbstractCost) = Scalar{Real}()
+inputspace(A::CostComposition)  = inputspace(A.right)
 
 #= compose(A::AbstractCost{Ileft}, B::AbstractMap{Iright,Oright}) where {N,Tleft,
 																Tright<:Tleft,
@@ -21,11 +22,11 @@ end
 																Ileft<:CoordinateSpace{Tleft,N},
 																Iright} = CostComposition(A, B) 
  =#																
-compose(A::AbstractCost, B::AbstractMap) = CostComposition(A, B) 
+compose(A::AbstractCost{IA}, B::AbstractMap{IB,OB}) where 
+			{N,TA,TB,IA<:CoordinateSpace{N,TA},OB<:CoordinateSpace{N,TB},IB} = 
+				CostComposition(A, B) 
 
-compose(::AbstractCost{O}, ::AbstractMap{I,O}) where {I,O} 	= throw(SimpleAlgebraFailure("The output of the Map does not match the input of the cost"))
-
-inputspace(A::CostComposition)  = inputspace(A.right)
+compose(::AbstractCost, ::AbstractMap) = throw(SimpleAlgebraFailure("The output of the Map does not match the input of the cost"))
 
 apply_(A::CostComposition, v) = apply(A.left,apply(A.right,v))
 

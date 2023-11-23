@@ -4,7 +4,7 @@ struct CostL2{I,D<:Union{AbstractArray,Number}} <: AbstractCost{I}
 	data::D
 	#W::P{T}    # precision matrix   
 
-	CostL2(inputspace::I, data::D) where {I<:CoordinateSpace,D<:AbstractArray} =  new{I,D}(inputspace,data)
+	CostL2(inputspace::I, data::D) where {I<:CoordinateSpace,D<:Union{AbstractArray,Number}} =  new{I,D}(inputspace,data)
 end
 
 @functor CostL2
@@ -15,12 +15,17 @@ function CostL2(::Type{T}, data::D) where {T<:Number,T1<:Number,D<:AbstractArray
 	return CostL2(data)
 end
 
-function CostL2(data::D) where {D<:AbstractArray}  
+function CostL2(data::D) where {T,D<:AbstractArray{T}}  
 	sz = size(data)
-	inputspace = CoordinateSpace(sz)
+	inputspace = CoordinateSpace(T,sz)
 	return CostL2(inputspace, data)
 end
 
+
+function CostL2(::Type{TI}, sz::NTuple{N,Int},data::T) where {TI,N,T<:Number}  
+	inputspace = CoordinateSpace(TI,sz)
+	return CostL2(inputspace, data)
+end
 
 function apply_(A::CostL2{I,D}, v) where {I,D}
 	return sum(abs2,v .- A.data)/2
