@@ -46,18 +46,21 @@ function apply_adjoint_(A::LinOpSelect{N,I,O,D}, x) where {N,I,O,D<:AbstractArra
 	return tmp
 end
 
-
-function compose(A::LinOpSelect) 
-	sz = inputsize(A)
-	return LinOpIdentity(sz)
-end
-
-
 function compose(left::B, right::C)  where {N,I,O,D,C<:LinOpSelect{N,I,O,D},B<:LinOpAdjoint{O,I,C}} 
     if left.parent===right
 		return LinOpIdentity(inputspace(left))
 	end
-	return LinOpComposition(left,right)
+	return MapComposition(left,right)
+end
+
+function compose(left::C, right::B)  where {N,I,O,D,C<:LinOpSelect{N,I,O,D},B<:LinOpAdjoint{O,I,C}} 
+    if left===right.parent
+		sp =inputspace(left)
+		diag = zeros(sp)
+		view(diag,left.index) .= one(eltype(diag))
+		return LinOpDiag(sp,sp, diag)
+	end
+	return MapComposition(left,right)
 end
 
 function ChainRulesCore.rrule( ::typeof(apply_),A::LinOpSelect, v)
