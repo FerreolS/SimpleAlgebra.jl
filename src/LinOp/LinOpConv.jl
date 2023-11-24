@@ -70,7 +70,7 @@ end
 
 function add(A::(LinOpConv{IA,D,F} where {D,F}), ::LinOpIdentity)  where 
 						{N,TA,IA<:CoordinateSpace{TA,N}}
-	return LinOpConv(inputspace(A), A.M .+ oneunit(TA) ,A.F)
+	return LinOpConv(inputspace(A), A.M + oneunit(TA) ,A.F)
 end
 
 function add(A::(LinOpConv{IA,D,F} where {D,F}), B::(LinOpScale{IB,OB,T} where {IB,T}))  where 
@@ -78,7 +78,7 @@ function add(A::(LinOpConv{IA,D,F} where {D,F}), B::(LinOpScale{IB,OB,T} where {
 	T = promote_type(TA,TB)
 	F = adapt(SimpleAlgebraEltypeAdaptor{T}(),A.F)
 	inpsp = CoordinateSpace(T,inputspace(A))
-	return LinOpConv(inpsp, A.M .+ T(B.scale) ,A.F)
+	return LinOpConv(inpsp, A.M + T(B.scale) ,A.F)
 end
 
 inverse(A::LinOpConv) = LinOpConv(inputspace(A), inv(A.M),A.F) 
