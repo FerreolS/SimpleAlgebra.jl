@@ -38,7 +38,7 @@ struct LinOpScale{I<:CoordinateSpace,O<:CoordinateSpace,T} <:  AbstractLinOp{I,O
 	inputspace::I
 	outputspace::O
 	scale::T
-	LinOpScale(inputspace::I,outputspace::O, scale::T) where {I<:CoordinateSpace,O<:CoordinateSpace,T} =  new{I,O,T}(inputspace,outputspace,scale)
+	LinOpScale(inputspace::I,outputspace::O, scale::T) where {I<:CoordinateSpace,O<:CoordinateSpace,T<:Number} =  new{I,O,T}(inputspace,outputspace,scale)
 end
 
 @functor LinOpScale
@@ -77,16 +77,18 @@ function compose(left::LinOpScale{I,O,Tl},right::LinOpScale{O,P,Tr}) where {I,O,
     LinOpScale(insp, outsp,left.scale .* right.scale)
 end
 
-compose(A::AbstractLinOp{I,O}, B::LinOpScale{I,T}) where {I,O,T} = compose(LinOpScale( outputsize(A), B.scale),A)
 Base.:*(scalar::T, A::AbstractMap{I,O}) where {I, O,T<:Number} = compose(LinOpScale( outputsize(A), scalar), A)
+
+compose(A::AbstractLinOp{I,O}, B::LinOpScale{I,T}) where {I,O,T} = compose(LinOpScale( outputsize(A), B.scale),A)
 compose(A::LinOpScale{I,T}, B::LinOpScale{I,T1}) where {I,T<:Number,T1<:Number}  = LinOpScale( inputsize(A), A.scale * B.scale)
 
+compose(::LinOpIdentity,B::LinOpScale)  = B
+compose(B::LinOpScale,::LinOpIdentity)  = B
 
 function add(A::LinOpScale{I,O,T} , ::LinOpIdentity) where {I,O,T}
 	return LinOpScale(inputspace(A),outputspace(A), A.scale + oneunit(T) )
 end
 add( B::LinOpIdentity,A::LinOpScale)  = add(A,B)
-
 add(A::LinOpScale , B::LinOpScale)  = LinOpScale(inputspace(A),outputspace(A), A.scale + B.scale )
 
 inverse(A::LinOpScale) = LinOpScale(outputspace(A),inputspace(A), inv(A.scale) )
@@ -142,9 +144,11 @@ LinOpAdjoint(A::LinOpDiag) =  LinOpDiag(outputspace(A),inputspace(A), conj.(A.di
 
 	
 compose(A::LinOpDiag, B::LinOpDiag)  = LinOpDiag(inputspace(A),outputspace(B),@. A.diag * B.diag)
-
 compose(A::LinOpScale, B::LinOpDiag)  = LinOpDiag(inputspace(A),outputspace(B),@. A.scale * B.diag)
 compose(A::LinOpDiag, B::LinOpScale)  = LinOpDiag(inputspace(A),outputspace(B),@. A.diag * B.scale)
+compose(::LinOpIdentity,B::LinOpDiag)  = B
+compose(B::LinOpDiag,::LinOpIdentity)  = B
+
 
 add(A::LinOpDiag{I,O,D1}, B::LinOpDiag{I,O,D2})   where {I,O,D1,D2} = LinOpDiag(inputspace(A),outputspace(A),@. A.diag + B.diag)
 add(A::LinOpDiag{I,O,D1}, B::LinOpScale{I,O,D2})   where {I,O,D1,D2} = LinOpDiag(inputspace(A),outputspace(A),@. A.diag + B.scale)
