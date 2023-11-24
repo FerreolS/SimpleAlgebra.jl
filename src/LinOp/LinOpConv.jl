@@ -50,12 +50,26 @@ end
 
 expand(A::LinOpConv) = A.F' * A.M * A.F
 
-function compose(A::LinOpAdjoint{I,O,P}, B::LinOpConv)  where {I,O,P<:LinOpConv}
-    if A===B
+# FIXME 2 Solutions
+LinOpAdjoint(A::LinOpConv{I,D,FT}) where{I,D,FT} = LinOpConv(inputspace(A),A.M',A.F)
+
+function compose(A::LinOpAdjoint{I,O,P}, B::LinOpConv{O,D,FT})  where {I,O,D,FT,P<:LinOpConv}
+    if A.parent===B
 		modulus = abs2.(B.M.diag)
 		return LinOpConv(inputspace(B),LinOpDiag(modulus),B.F)
 	end
-	return LinOpComposition(A,B)
+	return LinOpConv(inputspace(B),A.parent.M' * B.M,B.F)
+end
+
+function compose(A::MapInverse{I,O,P}, B::LinOpConv{O,DB,FT})  where {I,O,DA,DB,FT,P<:LinOpConv{O,DA,FT}}
+    if A.parent===B
+		return LinOpIdentity(inputspace(B))
+	end
+	return LinOpConv(inputspace(B),A.parent.M \ B.M,B.F)
+end
+
+function compose(A::LinOpConv{I,DA,FT},B::LinOpConv{I,DB,FT})  where {I,DA,DB,FT}
+	return LinOpConv(inputspace(B), A.M' * B.M ,B.F)
 end
 
 function add(A::(LinOpConv{IA,D,F} where {D,F}),
