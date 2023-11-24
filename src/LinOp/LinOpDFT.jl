@@ -90,6 +90,9 @@ LinOpDFT(T::Type{<:fftwNumber}, dims::Integer...; kwds...) =
 
 apply_(A::LinOpDFT, v)  = A.forward * v
 apply_adjoint_(A::LinOpDFT, v)  = A.backward * v
+apply_inverse_(A::LinOpDFT, v) = oneunit(eltype(inputspace(A))) ./ length(inputspace(A)) .* (A.backward * v)
+inverse(A::LinOpDFT) = oneunit(eltype(inputspace(A))) / length(inputspace(A)) * LinOpAdjoint(A)
+
 
 function compose(left::D, right::C)  where {I,O,F,B,C<:LinOpDFT{I,O,F,B},D<:LinOpAdjoint{O,I,C}} 
     if left.parent===right

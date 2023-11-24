@@ -44,3 +44,55 @@ Base.:+(B::T,A::AbstractMap) where {T<:Union{Number,AbstractArray}} = add(A,B)
 
 apply_(A::MapSum{I,O, D1,D2} ,x) where {I,O,D1<:AbstractMap{I,O},  D2<:AbstractMap{I,O}}= apply(A.left,x) .+ apply(A.right,x)
 apply_(A::MapSum{I,O, D1,D2} ,x) where {I,O,D1<:AbstractMap{I,O}, D2<:Union{Number,AbstractArray}} = apply(A.left,x) .+ A.right
+
+
+### Inverse ###
+
+function inverse(A::M) where {M<:AbstractMap}
+	if hasmethod(apply_inverse_,(M,Any))
+		return MapInverse(A)
+	end
+    throw(SimpleAlgebraFailure("Unimplemented inverse for $(typeof(A))"))
+end
+
+struct MapInverse{I,O,D<:AbstractMap} <:  AbstractMap{I,O}
+	parent::D
+	MapInverse(A::AbstractMap{O,I}) where {I,O}   = new{I,O,typeof(A)}(A)
+end
+
+@functor MapInverse
+
+MapInverse(A::MapInverse) = A.parent
+
+inputspace(A::MapInverse)  = outputspace(A.parent)
+outputspace(A::MapInverse) = inputspace(A.parent)
+
+
+apply_(A::MapInverse, v) = apply_inverse_(A.parent,v)
+apply_inverse_(A::MapInverse, v) = apply_(A.parent,v)
+
+
+### COMPOSITION
+
+compose(A::AbstractMap,B::AbstractMap) = MapComposition(A, B)
+
+
+struct MapComposition{I,O,Dleft<:AbstractMap,Dright<:AbstractMap} <:  AbstractMap{I,O}
+	left::Dleft
+	right::Dright
+	function MapComposition(A::Dleft, B::Dright) where {I1,O1, I2, O2,Dleft<:AbstractMap{I1,O1},  Dright<:AbstractMap{I2,O2}} 
+		    return new{I2,O1, Dleft,Dright}(A,B)
+	end
+end
+
+@functor MapComposition
+
+
+inputspace(A::MapComposition)  = inputspace(A.right)
+outputspace(A::MapComposition) = outputspace(A.left)
+
+
+apply_(A::MapComposition, v) = apply(A.left,apply(A.right,v))
+apply_jacobian_(A::MapComposition, v) = apply_jacobian_(A.right,apply_jacobian_(A.left,v))
+
+inverse(A::MapComposition) = inverse(A.right) * inverse(A.left)

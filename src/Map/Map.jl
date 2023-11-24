@@ -20,6 +20,24 @@ Base.:*(A::AbstractMap, v)  = apply(A, v )
 
 Base.:*(A::AbstractMap, B::AbstractMap)   =  compose(A,B)
 
+
+Base.inv(A::AbstractMap) = inverse(A)
+
+function Base.:/(A::T,B::AbstractMap) where T
+	if A===B
+		return LinOpIdentity(inputspace(B))
+	end
+    A * inv(B)
+end
+function Base.:\(B::AbstractMap,A::T) where T
+	if A===B
+		return LinOpIdentity(inputspace(B))
+	end
+    inv(B) * A
+end
+
+
+
 function apply(A::AbstractMap{I,O}, v) where {I,O}
 	#@assert v ∈ inputspace(A) "The input size must belong to the space $(inputspace(A))"
 	apply_(A, v)

@@ -42,6 +42,12 @@ function apply_adjoint_(A::LinOpConv, x)
 	#return apply_adjoint_(A.F, apply_adjoint_(A.M, apply_(A.F,x)))
 end
 
+
+function apply_inverse_(A::LinOpConv, x)
+	return A.F'*( inv(A.M) *( A.F * x))
+	#return apply_inverse_(A.F, apply_inverse_(A.M, apply_inverse_(A.F,x)))
+end 
+
 expand(A::LinOpConv) = A.F' * A.M * A.F
 
 function compose(A::LinOpAdjoint{I,O,P}, B::LinOpConv)  where {I,O,P<:LinOpConv}
@@ -74,3 +80,5 @@ function add(A::(LinOpConv{IA,D,F} where {D,F}), B::(LinOpScale{IB,OB,T} where {
 	inpsp = CoordinateSpace(T,inputspace(A))
 	return LinOpConv(inpsp, A.M .+ T(B.scale) ,A.F)
 end
+
+inverse(A::LinOpConv) = LinOpConv(inputspace(A), inv(A.M),A.F) 

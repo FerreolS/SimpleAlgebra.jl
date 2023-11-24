@@ -31,6 +31,7 @@ function add(A::LinOpIdentity, B::LinOpIdentity)
 	return LinOpScale(sp,sp, T.(2))
 end
 
+inverse(A::LinOpIdentity) = A
 ### SCALING 
 
 struct LinOpScale{I<:CoordinateSpace,O<:CoordinateSpace,T} <:  AbstractLinOp{I,O} 
@@ -88,6 +89,8 @@ add( B::LinOpIdentity,A::LinOpScale)  = add(A,B)
 
 add(A::LinOpScale , B::LinOpScale)  = LinOpScale(inputspace(A),outputspace(A), A.scale + B.scale )
 
+inverse(A::LinOpScale) = LinOpScale(outputspace(A),inputspace(A), inv(A.scale) )
+
 
 ### DIAGONAL (element-wise multiplication) 
 
@@ -131,6 +134,8 @@ end
 apply_(A::LinOpDiag, v)  = @. v * A.diag
 
 apply_adjoint_(A::LinOpDiag, v)  = @. v * conj(A.diag)
+apply_inverse_(A::LinOpDiag, v)  = @. A.diag \ v 
+
 	
 compose(A::LinOpDiag, B::LinOpDiag)  = LinOpDiag(inputspace(A),outputspace(B),@. A.diag * B.diag)
 
@@ -147,3 +152,8 @@ add(A::LinOpDiag, B::Number) = LinOpDiag(inputspace(A),outputspace(A),A.diag .+ 
 add(B::Number,A::LinOpDiag) = add(A,B)
 add(A::LinOpDiag{I,O,D1}, B::AbstractArray{T,N})   where {T,N,I,O,D1<:AbstractArray{T,N}} = LinOpDiag(inputspace(A),outputspace(A),@. A.diag + B)
 add(B::AbstractArray,A::LinOpDiag) = add(A,B)
+
+Base.:\(A::LinOpDiag{I,O,D1}, B::LinOpDiag{I,O,D2})   where {I,O,D1,D2} = LinOpDiag(inputspace(A),outputspace(A),@. A.diag \ B.diag)
+Base.:/(A::LinOpDiag{I,O,D1}, B::LinOpDiag{I,O,D2})   where {I,O,D1,D2} = LinOpDiag(inputspace(A),outputspace(A),@. A.diag / B.diag)
+
+inverse(A::LinOpDiag{I,O,D}) where {T,I,O,D<:AbstractArray{T}} = LinOpDiag(outputspace(A),inputspace(A), one(T)./(A.diag) )

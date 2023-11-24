@@ -4,6 +4,8 @@ using ChainRulesCore
 using Requires
 using Functors
 using Adapt
+using InverseFunctions
+import InverseFunctions:inverse
 
 struct SimpleAlgebraFailure <: Exception
     msg::String
