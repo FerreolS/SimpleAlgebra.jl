@@ -1,11 +1,8 @@
 
 
-Base.adjoint(A::AbstractLinOp) = LinOpAdjoint(A)
-
-compose(A::AbstractLinOp,B::AbstractLinOp) = LinOpComposition(A, B)
-Base.sum(A::AbstractLinOp,B::AbstractLinOp) = LinOpSum(A, B)
-
 ### ADJOINT ###
+
+Base.adjoint(A::AbstractLinOp) = LinOpAdjoint(A)
 
 struct LinOpAdjoint{I,O,D<:AbstractLinOp} <:  AbstractLinOp{I,O}
 	parent::D
@@ -29,26 +26,9 @@ Base.adjoint(A::LinOpAdjoint) = A.parent
 
 ### COMPOSITION ###
 
-struct LinOpComposition{I,O,Dleft<:AbstractLinOp,Dright<:AbstractLinOp} <:  AbstractLinOp{I,O}
-	left::Dleft
-	right::Dright
-	function LinOpComposition(A::Dleft, B::Dright) where {I1,O1, I2, O2,Dleft<:AbstractLinOp{I1,O1},  Dright<:AbstractLinOp{I2,O2}} 
-		    return new{I2,O1, Dleft,Dright}(A,B)
-	end
-end
+apply_adjoint_(A::MapComposition{I,O,L,R}, v) where {I,O,L<:AbstractLinOp,R<:AbstractLinOp} = apply_adjoint(A.right,apply_adjoint(A.left,v))
 
-@functor LinOpComposition
-
-
-inputspace(A::LinOpComposition)  = inputspace(A.right)
-outputspace(A::LinOpComposition) = outputspace(A.left)
-
-
-apply_(A::LinOpComposition, v) = apply(A.left,apply(A.right,v))
-
-apply_adjoint_(A::LinOpComposition, v) = apply_adjoint(A.right,apply_adjoint(A.left,v))
-
-Base.adjoint(A::LinOpComposition)  = A.right' * A.left'
+Base.adjoint(A::MapComposition{I,O,L,R}) where {I,O,L<:AbstractLinOp,R<:AbstractLinOp}   = A.right' * A.left'
 
 
 ### SUM ###
