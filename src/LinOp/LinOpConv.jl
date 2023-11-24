@@ -32,13 +32,13 @@ function  LinOpConv(::Val{:psf},psf::AbstractArray{T}; centered = true) where{T<
 end
 
 function apply_(A::LinOpConv, x)
-	return A.F'*(A.M*(A.F*x))
+	return length(inputspace(A)) .\ (A.F'*(A.M*(A.F*x)))
 	#return apply_adjoint_(A.F, apply_(A.M, apply_(A.F,x)))
 end
 
 
 function apply_adjoint_(A::LinOpConv, x)
-	return A.F'*( A.M' *( A.F * x))
+	return length(inputspace(A)) .\ (A.F'*( A.M' *( A.F * x)))
 	#return apply_adjoint_(A.F, apply_adjoint_(A.M, apply_(A.F,x)))
 end
 
