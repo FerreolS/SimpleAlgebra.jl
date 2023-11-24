@@ -16,7 +16,7 @@ LinOpIdentity(inputspace::I) where {I<:AbstractDomain} = LinOpIdentity{I}(inputs
 apply_(::LinOpIdentity{I}, x) where {I} = x
 
 apply_adjoint_(::LinOpIdentity{I}, x) where {I} =  x
-Base.adjoint(A::LinOpIdentity) = A	
+LinOpAdjoint(A::LinOpIdentity) = A	
 
 # FIXME should we be restrictive about the size?
 compose(::LinOpIdentity,A::LinOpIdentity)  = A
@@ -67,7 +67,7 @@ apply_(A::LinOpScale, x)  = A.scale * x
 
 apply_adjoint_(A::LinOpScale, x) =  conj(A.scale) * x
 
-
+LinOpAdjoint(A::LinOpScale{I,O,T}) where {T<:Real,I,O} = A
 LinOpAdjoint(A::LinOpScale) =   LinOpScale(outputspace(A),inputspace(A), conj(A.scale))
 
 function compose(left::LinOpScale{I,O,Tl},right::LinOpScale{O,P,Tr}) where {I,O,P,Tr,Tl}
@@ -135,6 +135,10 @@ apply_(A::LinOpDiag, v)  = @. v * A.diag
 
 apply_adjoint_(A::LinOpDiag, v)  = @. v * conj(A.diag)
 apply_inverse_(A::LinOpDiag, v)  = @. A.diag \ v 
+
+LinOpAdjoint(A::LinOpDiag{I,O,D}) where {T<:Real,I,O,D<:AbstractArray{T}} = A
+LinOpAdjoint(A::LinOpDiag) =  LinOpDiag(outputspace(A),inputspace(A), conj.(A.diag))
+
 
 	
 compose(A::LinOpDiag, B::LinOpDiag)  = LinOpDiag(inputspace(A),outputspace(B),@. A.diag * B.diag)
