@@ -98,7 +98,30 @@ function compose(left::D, right::C)  where {I,O,F,B,C<:LinOpDFT{I,O,F,B},D<:LinO
     if left.parent===right
 		return LinOpScale(inputsize(right),length(inputspace(right)))
 	end
-	return LinOpComposition(left,right)
+	return MapComposition(left,right)
+end
+
+
+function compose(left::C, right::D)  where {I,O,F,B,C<:LinOpDFT{I,O,F,B},D<:LinOpAdjoint{O,I,C}} 
+    if left===right.parent
+		return LinOpScale(inputsize(right),length(inputspace(right)))
+	end
+	return MapComposition(left,right)
+end
+
+
+function compose(left::D, right::C)  where {I,O,F,B,C<:LinOpDFT{I,O,F,B},D<:MapInverse{O,I,C}} 
+    if left.parent===right
+		return LinOpIdentity(inputspace(right))
+	end
+	return MapComposition(left,right)
+end
+
+function compose(left::C, right::D)  where {I,O,F,B,C<:LinOpDFT{I,O,F,B},D<:MapInverse{O,I,C}} 
+    if left===right.parent
+		return LinOpIdentity(inputspace(right))
+	end
+	return MapComposition(left,right)
 end
 
 function ChainRulesCore.rrule( ::typeof(apply_),A::LinOpDFT, v)
