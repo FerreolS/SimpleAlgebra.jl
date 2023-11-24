@@ -2,23 +2,22 @@ abstract type AbstractMap{I<:AbstractDomain,O<:AbstractDomain} end
 
 inputspace(A::AbstractMap)  = A.inputspace
 outputspace(A::AbstractMap)  = A.outputspace
-#inputspace(A::AbstractMap{I,I}) where {I} = A.inputspace
 
 inputsize(A::AbstractMap)  = size(inputspace(A))
 outputsize(A::AbstractMap) = size(outputspace(A))
-#outputsize(A::AbstractMap{I,I}) where {I} = size(inputspace(A))
-
-#= function Adapt.adapt_storage(::Type{T}, x::AbstractMap) where T
-    fmap(adapt(T),x)
-end
- =#
 
 (A::AbstractMap)( v)   = A*v
-#(A::Type{<:AbstractMap})(I::TI,O::TO,x...)  where {TI<:AbstractDomain,TO<:AbstractDomain} = A{I,O}(x...)
+
+
+Base.:+(A::AbstractMap, B::AbstractMap)  = add(A,B)
+Base.:+(A::AbstractMap, B::T) where {T<:Union{Number,AbstractArray}}= add(A,B)
+Base.:+(B::T,A::AbstractMap) where {T<:Union{Number,AbstractArray}} = add(A,B)
+
 
 Base.:*(A::AbstractMap, v)  = apply(A, v ) 
 
 Base.:*(A::AbstractMap, B::AbstractMap)   =  compose(A,B)
+Base.:∘(A::AbstractMap, B::AbstractMap)   =  compose(A,B)
 
 
 Base.inv(A::AbstractMap) = inverse(A)
@@ -57,9 +56,9 @@ end
 function apply_jacobian_ end
 
 
-function compose(::AbstractMap, ::AbstractMap) 
+#= function compose(::AbstractMap, ::AbstractMap) 
 	throw(SimpleAlgebraFailure("Input of first element does not match the output of the second element"))
-end
+end =#
 
 # FIXME
 #= function ChainRulesCore.rrule( ::typeof(apply_),A::AbstractMap, v)
@@ -67,5 +66,4 @@ end
     return  apply_(A,v), Map_pullback
 end =#
 
-include("./MapEmbedding.jl")
 include("./OperationOnMap.jl")

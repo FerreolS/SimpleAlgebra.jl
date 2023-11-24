@@ -38,10 +38,6 @@ add(A::AbstractMap, B::AbstractArray) = MapSum(A,B)
 
 #MapSum(A::AbstractMap,B) = throw(SimpleAlgebraFailure("Dimension or type mismatch in MapSum"))
 
-Base.:+(A::AbstractMap, B::AbstractMap)  = add(A,B)
-Base.:+(A::AbstractMap, B::T) where {T<:Union{Number,AbstractArray}}= add(A,B)
-Base.:+(B::T,A::AbstractMap) where {T<:Union{Number,AbstractArray}} = add(A,B)
-
 apply_(A::MapSum{I,O, D1,D2} ,x) where {I,O,D1<:AbstractMap{I,O},  D2<:AbstractMap{I,O}}= apply(A.left,x) .+ apply(A.right,x)
 apply_(A::MapSum{I,O, D1,D2} ,x) where {I,O,D1<:AbstractMap{I,O}, D2<:Union{Number,AbstractArray}} = apply(A.left,x) .+ A.right
 
