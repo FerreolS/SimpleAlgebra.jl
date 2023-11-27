@@ -66,3 +66,4 @@ f16(m) = _paramtype(Float16, m)
 
 
 Adapt.adapt_storage(::SimpleAlgebraEltypeAdaptor{T}, x::AbstractMap)  where T = Adapt.adapt_storage(T, x)
+adapt_structure(to, M::AbstractMap) = fmap(to, M)
