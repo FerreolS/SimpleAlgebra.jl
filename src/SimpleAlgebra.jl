@@ -21,8 +21,8 @@ include("Cost/Cost.jl")
 include("Utils/functor.jl")
 #include("Utils/traits.jl")
 function __init__()
-    @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" include("Utils/needZygote.jl")
-	@require Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c" include("Utils/needFlux.jl")
+    @require Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" include("Ext/ExtZygote.jl")
+	@require Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c" include("Ext/ExtFlux.jl")
 end
 
 end # module SimpleAlgebra
