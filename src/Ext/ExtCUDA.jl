@@ -9,15 +9,15 @@ function Adapt.adapt_storage(::Type{CuArray}, x::LinOpDFT)
     # inputs.
     
     if T<: fftwReal 
-        forward = plan_rfft(CuArray{T}(undef, dims);
+        forward = plan_rfft(CUDA.CuArray{T}(undef, dims);
                         flags = (planning | FFTW.PRESERVE_INPUT),
                         timelimit = timelimit)
 
-        backward = plan_brfft(CuArray{Complex{T}}(undef, forward.osz), dims[1];
+        backward = plan_brfft(CUDA.CuArray{Complex{T}}(undef, forward.osz), dims[1];
                           flags = (planning | FFTW.DESTROY_INPUT),
                           timelimit = timelimit)
     else
-        temp = CuArray{T}(undef, dims)
+        temp = CUDA.CuArray{T}(undef, dims)
         forward = plan_fft!(temp; flags = (planning | FFTW.DESTROY_INPUT),
                         timelimit = timelimit)
         backward = plan_bfft!(temp; flags = (planning | FFTW.DESTROY_INPUT),
