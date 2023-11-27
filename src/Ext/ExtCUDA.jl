@@ -1,5 +1,5 @@
 
-function Adapt.adapt_storage(::Type{CuArray}, x::LinOpDFT) 
+function Adapt.adapt_storage(::Type{CUDA.CuArray}, x::LinOpDFT) 
     dims = inputsize(x)
 	T = eltype(inputspace(x))
     planning = planning = check_flags(FFTW.MEASURE)
