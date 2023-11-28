@@ -1,7 +1,7 @@
 
-function Adapt.adapt_storage(::Type{CUDA.CuArray}, x::LinOpDFT{I,O,F,B}) where  {I,O,F,B}
+function Adapt.adapt_storage(::Type{CUDA.CuArray{T}}, x::LinOpDFT) where  {T}
     dims = inputsize(x)
-	T = eltype(I)
+	#Tx = eltype(I)
     
     if T<: fftwReal 
         forward = plan_rfft(CUDA.CuArray{T}(undef, dims))
