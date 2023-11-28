@@ -91,7 +91,7 @@ end
 add( B::LinOpIdentity,A::LinOpScale)  = add(A,B)
 add(A::LinOpScale , B::LinOpScale)  = LinOpScale(inputspace(A),outputspace(A), A.scale + B.scale )
 
-inverse(A::LinOpScale) = LinOpScale(outputspace(A),inputspace(A), inv(A.scale) )
+inverse(A::LinOpScale) = LinOpScale(outputspace(A),inputspace(A), 1/A.scale )
 
 
 ### DIAGONAL (element-wise multiplication) 
