@@ -67,9 +67,9 @@ function LinOpDFT(::Type{T},
     # Compute the plans with suitable FFTW flags.  For maximum efficiency, the
     # transforms are always applied in-place and thus cannot preserve their
     # inputs.
-    forward = plan_fft!(temp; flags = (planning | FFTW.DESTROY_INPUT),
+    forward = plan_fft(temp; flags = (planning | FFTW.DESTROY_INPUT),
                         timelimit = timelimit)
-    backward = plan_bfft!(temp; flags = (planning | FFTW.DESTROY_INPUT),
+    backward = plan_bfft(temp; flags = (planning | FFTW.DESTROY_INPUT),
                           timelimit = timelimit)
 
     # Build operator.
