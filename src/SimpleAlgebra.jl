@@ -7,6 +7,20 @@ using Adapt
 using InverseFunctions
 import InverseFunctions:inverse
 
+export  AbstractMap,AbstractCost
+export  AbstractDomain,
+        CoordinateSpace,AbstractCoordinateSpace,
+        inputspace, outputspace,
+        inputsize, outputsize
+export  AbstractLinOp, 
+        LinOpConv, 
+        LinOpDFT,
+        LinOpIdentity,
+        LinOpScale,
+        LinOpDiag,
+        LinOpSelect
+
+
 struct SimpleAlgebraFailure <: Exception
     msg::String
 end
