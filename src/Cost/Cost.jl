@@ -22,7 +22,7 @@ inputspace(A::CostComposition)  = inputspace(A.right)
 																Ileft<:CoordinateSpace{Tleft,N},
 																Iright} = CostComposition(A, B) 
  =#																
-c#= ompose(A::AbstractCost{IA}, B::AbstractMap{IB,OB}) where 
+#= compose(A::AbstractCost{IA}, B::AbstractMap{IB,OB}) where 
 			{N,TA,TB,IA<:CoordinateSpace{N,TA},OB<:CoordinateSpace{N,TB},IB<:AbstractDomain} = 
 				CostComposition(A, B) 
 
