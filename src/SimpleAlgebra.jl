@@ -19,6 +19,7 @@ export  AbstractLinOp,
         LinOpScale,
         LinOpDiag,
         LinOpSelect
+export CostL2
 
 
 struct SimpleAlgebraFailure <: Exception
