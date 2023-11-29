@@ -28,7 +28,7 @@ function CostL2(::Type{TI}, sz::NTuple{N,Int},data::T) where {TI,N,T<:Number}
 end
 
 
-function CostL2(sz::NTuple{N,Int},data::T) where {TI,N,T<:Number}  
+function CostL2(sz::NTuple{N,Int},data::T) where {N,T<:Number}  
 	inputspace = CoordinateSpace(T,sz)
 	return CostL2(inputspace, data)
 end

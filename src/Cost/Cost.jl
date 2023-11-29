@@ -22,11 +22,13 @@ inputspace(A::CostComposition)  = inputspace(A.right)
 																Ileft<:CoordinateSpace{Tleft,N},
 																Iright} = CostComposition(A, B) 
  =#																
-compose(A::AbstractCost{IA}, B::AbstractMap{IB,OB}) where 
-			{N,TA,TB,IA<:CoordinateSpace{N,TA},OB<:CoordinateSpace{N,TB},IB} = 
+c#= ompose(A::AbstractCost{IA}, B::AbstractMap{IB,OB}) where 
+			{N,TA,TB,IA<:CoordinateSpace{N,TA},OB<:CoordinateSpace{N,TB},IB<:AbstractDomain} = 
 				CostComposition(A, B) 
 
 compose(::AbstractCost, ::AbstractMap) = throw(SimpleAlgebraFailure("The output of the Map does not match the input of the cost"))
+ =#
+compose(A::AbstractCost, B::AbstractMap) =CostComposition(A, B) 
 
 apply_(A::CostComposition, v) = apply(A.left,apply(A.right,v))
 
