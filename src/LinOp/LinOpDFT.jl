@@ -135,7 +135,7 @@ function ChainRulesCore.rrule( ::typeof(apply_adjoint_),A::LinOpDFT, v)
 end
 
 
-function Adapt.adapt_storage(::Type{Array{T}}, x::LinOpDFT) where {T<:fftwNumber}
+function Adapt.adapt_storage(::Type{AbstractArray{T}}, x::LinOpDFT) where {T<:fftwNumber}
     dims = inputsize(x)
     planning = planning = check_flags(FFTW.MEASURE)
     timelimit = FFTW.NO_TIMELIMIT

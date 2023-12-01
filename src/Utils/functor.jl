@@ -3,7 +3,7 @@
 
 struct SimpleAlgebraEltypeAdaptor{T} end
 
-Adapt.adapt_storage(::SimpleAlgebraEltypeAdaptor{T}, x::AbstractArray{<:AbstractFloat}) where {T<:AbstractFloat} = 
+Adapt.adapt_storage(::SimpleAlgebraEltypeAdaptor{T}, x::AbstractArray{<:Number}) where {T<:Number} = 
   convert(AbstractArray{T}, x)
 Adapt.adapt_storage(::SimpleAlgebraEltypeAdaptor{T}, x::AbstractArray{<:Complex{<:AbstractFloat}}) where {T<:AbstractFloat} = 
   convert(AbstractArray{Complex{T}}, x)
@@ -11,7 +11,7 @@ Adapt.adapt_storage(::SimpleAlgebraEltypeAdaptor{T}, x::AbstractArray{<:Complex{
 _paramtype(::Type{T}, m) where T = fmap(adapt(SimpleAlgebraEltypeAdaptor{T}()), m)
 
 # fastpath for arrays
-_paramtype(::Type{T}, x::AbstractArray{<:AbstractFloat}) where {T<:AbstractFloat} = 
+_paramtype(::Type{T}, x::AbstractArray{<:Number}) where {T<:Number} = 
   convert(AbstractArray{T}, x)
 _paramtype(::Type{T}, x::AbstractArray{<:Complex{<:AbstractFloat}}) where {T<:AbstractFloat} = 
   convert(AbstractArray{Complex{T}}, x)

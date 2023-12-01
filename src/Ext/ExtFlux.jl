@@ -27,4 +27,4 @@ end
 
 
 
-Adapt.adapt_storage(::Flux.FluxEltypeAdaptor{T}, x::AbstractMap)  where T = Adapt.adapt_storage(SimpleAlgebraEltypeAdaptor{T}(), x)
+Adapt.adapt_storage(::Flux.FluxEltypeAdaptor{T}, x::AbstractMap)  where T = Adapt.adapt_storage(AbstractArray{T}, x)
