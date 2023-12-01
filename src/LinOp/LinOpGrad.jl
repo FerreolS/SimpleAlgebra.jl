@@ -70,21 +70,6 @@ function generate_gradient_adjoint_tullio(num_dims)
    	return @eval (Y,X) -> ($(out...))
 end
 
-#= 
-
-function generate_gradient_adjoint(num_dims)
-	out =[]
-	for d = 1:num_dims
-	 	idx1 = generate_indices(num_dims, d, +1)
-		idx2 = generate_indices(num_dims, d,0)
-		push!(out, :(@tullio    Y[$(idx1...)] += X[$(idx1...),$d] - X[$(idx2...),$d];))
-		lfirst = (i==d ? 1 : :(Colon()) for i=1:num_dims)
-		lend = (i==d ? :(size(X,$i)) : :(Colon()) for i=1:num_dims)
-		push!(out, :(  Y[$(lfirst...)] .+= X[$(lfirst...),$d]))
-		push!(out, :(  Y[$(lend...)] .-= X[$(lend...),$d]))
-	end
-   	return @eval (Y,X) -> ($(out...))
-end =#
 
 
 function generate_gradient(num_dims)
