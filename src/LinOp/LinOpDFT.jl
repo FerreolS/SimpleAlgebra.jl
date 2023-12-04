@@ -91,37 +91,37 @@ LinOpDFT(T::Type{<:fftwNumber}, dims::Integer...; kwds...) =
 apply_(A::LinOpDFT, v)  = A.forward * v
 apply_adjoint_(A::LinOpDFT, v)  = A.backward * v
 apply_inverse_(A::LinOpDFT, v) = oneunit(eltype(inputspace(A))) ./ length(inputspace(A)) .* (A.backward * v)
-inverse(A::LinOpDFT) = oneunit(eltype(inputspace(A))) / length(inputspace(A)) * LinOpAdjoint(A)
+inverse(A::LinOpDFT) = oneunit(eltype(inputspace(A))) / length(inputspace(A)) * AdjointLinOp(A)
 
 
-function compose(left::D, right::C)  where {I,O,F,B,C<:LinOpDFT{I,O,F,B},D<:LinOpAdjoint{O,I,C}} 
+function compose(left::D, right::C)  where {I,O,F,B,C<:LinOpDFT{I,O,F,B},D<:AdjointLinOp{O,I,C}} 
     if left.parent===right
 		return LinOpScale(inputsize(right),length(inputspace(right)))
 	end
-	return MapComposition(left,right)
+	return CompositionMap(left,right)
 end
 
 
-function compose(left::C, right::D)  where {I,O,F,B,C<:LinOpDFT{I,O,F,B},D<:LinOpAdjoint{O,I,C}} 
+function compose(left::C, right::D)  where {I,O,F,B,C<:LinOpDFT{I,O,F,B},D<:AdjointLinOp{O,I,C}} 
     if left===right.parent
 		return LinOpScale(inputsize(right),length(inputspace(right)))
 	end
-	return MapComposition(left,right)
+	return CompositionMap(left,right)
 end
 
 
-function compose(left::D, right::C)  where {I,O,F,B,C<:LinOpDFT{I,O,F,B},D<:MapInverse{O,I,C}} 
+function compose(left::D, right::C)  where {I,O,F,B,C<:LinOpDFT{I,O,F,B},D<:InverseMap{O,I,C}} 
     if left.parent===right
 		return LinOpIdentity(inputspace(right))
 	end
-	return MapComposition(left,right)
+	return CompositionMap(left,right)
 end
 
-function compose(left::C, right::D)  where {I,O,F,B,C<:LinOpDFT{I,O,F,B},D<:MapInverse{O,I,C}} 
+function compose(left::C, right::D)  where {I,O,F,B,C<:LinOpDFT{I,O,F,B},D<:InverseMap{O,I,C}} 
     if left===right.parent
 		return LinOpIdentity(inputspace(right))
 	end
-	return MapComposition(left,right)
+	return CompositionMap(left,right)
 end
 
 function ChainRulesCore.rrule( ::typeof(apply_),A::LinOpDFT, v)

@@ -51,9 +51,9 @@ end
 expand(A::LinOpConv) = A.F' * A.M * A.F
 
 # FIXME 2 Solutions
-LinOpAdjoint(A::LinOpConv{I,D,FT}) where{I,D,FT} = LinOpConv(inputspace(A),A.M',A.F)
+AdjointLinOp(A::LinOpConv{I,D,FT}) where{I,D,FT} = LinOpConv(inputspace(A),A.M',A.F)
 
-function compose(A::LinOpAdjoint{I,O,P}, B::LinOpConv{O,D,FT})  where {I,O,D,FT,P<:LinOpConv}
+function compose(A::AdjointLinOp{I,O,P}, B::LinOpConv{O,D,FT})  where {I,O,D,FT,P<:LinOpConv}
     if A.parent===B
 		modulus = abs2.(B.M.diag)
 		return LinOpConv(inputspace(B),LinOpDiag(modulus),B.F)
@@ -61,7 +61,7 @@ function compose(A::LinOpAdjoint{I,O,P}, B::LinOpConv{O,D,FT})  where {I,O,D,FT,
 	return LinOpConv(inputspace(B),A.parent.M' * B.M,B.F)
 end
 
-function compose(A::MapInverse{I,O,P}, B::LinOpConv{O,DB,FT})  where {I,O,DA,DB,FT,P<:LinOpConv{O,DA,FT}}
+function compose(A::InverseMap{I,O,P}, B::LinOpConv{O,DB,FT})  where {I,O,DA,DB,FT,P<:LinOpConv{O,DA,FT}}
     if A.parent===B
 		return LinOpIdentity(inputspace(B))
 	end

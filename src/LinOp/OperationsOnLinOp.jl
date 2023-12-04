@@ -2,49 +2,49 @@
 
 ### ADJOINT ###
 
-Base.adjoint(A::AbstractLinOp) = LinOpAdjoint(A)
+Base.adjoint(A::AbstractLinOp) = AdjointLinOp(A)
 
-struct LinOpAdjoint{I,O,D<:AbstractLinOp} <:  AbstractLinOp{I,O}
+struct AdjointLinOp{I,O,D<:AbstractLinOp} <:  AbstractLinOp{I,O}
 	parent::D
-	LinOpAdjoint(A::AbstractLinOp{O,I}) where {I,O}   = new{I,O,typeof(A)}(A)
+	AdjointLinOp(A::AbstractLinOp{O,I}) where {I,O}   = new{I,O,typeof(A)}(A)
 end
 
-@functor LinOpAdjoint
+@functor AdjointLinOp
 
-LinOpAdjoint(A::LinOpAdjoint) = A.parent
+AdjointLinOp(A::AdjointLinOp) = A.parent
 
-inputspace(A::LinOpAdjoint)  = outputspace(A.parent)
-outputspace(A::LinOpAdjoint) = inputspace(A.parent)
+inputspace(A::AdjointLinOp)  = outputspace(A.parent)
+outputspace(A::AdjointLinOp) = inputspace(A.parent)
 
 
-apply_(A::LinOpAdjoint, v) = apply_adjoint(A.parent,v)
+apply_(A::AdjointLinOp, v) = apply_adjoint(A.parent,v)
 
-apply_adjoint_(A::LinOpAdjoint, v) = apply(A.parent,v)
+apply_adjoint_(A::AdjointLinOp, v) = apply(A.parent,v)
 
-Base.adjoint(A::LinOpAdjoint) = A.parent	
+Base.adjoint(A::AdjointLinOp) = A.parent	
 
 
 ### COMPOSITION ###
 
-apply_adjoint_(A::MapComposition{I,O,L,R}, v) where {I,O,L<:AbstractLinOp,R<:AbstractLinOp} = apply_adjoint(A.right,apply_adjoint(A.left,v))
+apply_adjoint_(A::CompositionMap{I,O,L,R}, v) where {I,O,L<:AbstractLinOp,R<:AbstractLinOp} = apply_adjoint(A.right,apply_adjoint(A.left,v))
 
-Base.adjoint(A::MapComposition{I,O,L,R}) where {I,O,L<:AbstractLinOp,R<:AbstractLinOp}   = A.right' * A.left'
+Base.adjoint(A::CompositionMap{I,O,L,R}) where {I,O,L<:AbstractLinOp,R<:AbstractLinOp}   = A.right' * A.left'
 
 
 ### SUM ###
 
-struct LinOpSum{I,O,D1<:AbstractLinOp{I,O},D2<:AbstractLinOp{I,O}} <:  AbstractLinOp{I,O}
+struct SumLinOp{I,O,D1<:AbstractLinOp{I,O},D2<:AbstractLinOp{I,O}} <:  AbstractLinOp{I,O}
 	left::D1
 	right::D2
-	function LinOpSum(A::D1, B::D2) where {I,O, D1<:AbstractLinOp{I,O},  D2<:AbstractLinOp{I,O}} 
+	function SumLinOp(A::D1, B::D2) where {I,O, D1<:AbstractLinOp{I,O},  D2<:AbstractLinOp{I,O}} 
 		    return new{O,I,D1,D2}(A,B)
 	end
 end
 
-@functor LinOpSum
+@functor SumLinOp
 
-apply_(A::LinOpSum, x) = apply(A.left,x) .+ apply(A.right,x)
+apply_(A::SumLinOp, x) = apply(A.left,x) .+ apply(A.right,x)
 
-apply_adjoint_(A::LinOpSum, v) = apply_adjoint(A.right,v) .+ apply_adjoint(A.left,v)
+apply_adjoint_(A::SumLinOp, v) = apply_adjoint(A.right,v) .+ apply_adjoint(A.left,v)
 
-Base.adjoint(A::LinOpSum)  = A.right' + A.left'
+Base.adjoint(A::SumLinOp)  = A.right' + A.left'

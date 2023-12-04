@@ -35,7 +35,7 @@ Adapted from https://github.com/roflmaostc/DeconvOptim.jl/blob/master/src/regula
 Generates a list of symbols which can be used to generate Tullio expressions
 via metaprogramming.
 `num_dims` is the total number of dimensions.
-`dim` is the dimension where there is a offset `offset` in the index.
+`d` is the dimension where there is a offset `offset` in the index.
 .
 """
 function generate_indices(num_dims, d, offset)
