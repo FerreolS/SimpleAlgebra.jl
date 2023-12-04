@@ -18,7 +18,8 @@ export  AbstractLinOp,
         LinOpIdentity,
         LinOpScale,
         LinOpDiag,
-        LinOpSelect
+        LinOpSelect,
+        LinOpGrad
 export CostL2
 
 

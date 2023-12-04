@@ -1,6 +1,32 @@
 
 using Tullio
 
+struct LinOpGrad{I,O,FA<:Function,FT<:Function} <:  AbstractLinOp{I,O}
+    inputspace::I
+	outputspace::O
+	functionapply::FA
+	functionadjoint::FT
+	function LinOpGrad(inputspace::I) where {I<:AbstractDomain}
+		N = ndims(inputspace)
+		outputspace = CoordinateSpace(eltype(inputspace), (size(inputspace)...,N))
+		functionapply = generate_gradient_tullio(N)
+		functionadjoint = generate_gradient_adjoint_tullio(N)
+    	return new{I,typeof(outputspace),typeof(functionapply),typeof(functionadjoint)}(inputspace,outputspace,functionapply,functionadjoint)
+	end
+end 
+
+LinOpGrad(sz::NTuple) 						= LinOpGrad(CoordinateSpace(sz))
+LinOpGrad(sz::Int)							= LinOpGrad(Tuple(sz))
+LinOpGrad(::Type{TI}, sz::Int) where TI 	= LinOpGrad(TI,Tuple(sz))
+LinOpGrad(::Type{TI}, sz::NTuple) where TI 	= LinOpGrad(CoordinateSpace(TI,sz))
+LinOpGrad(::Type{TI}, inputspace::CoordinateSpace) where TI = LinOpGrad(CoordinateSpace(TI,inputspace))
+
+apply_(A::LinOpGrad, x)  = apply_grad(A.functionapply, x)
+
+apply_adjoint_(A::LinOpGrad, x) =  apply_grad_adjoint(A.functionadjoint,x)
+
+
+
 """
 Adapted from https://github.com/roflmaostc/DeconvOptim.jl/blob/master/src/regularizer.jl
 
@@ -99,7 +125,7 @@ function generate_gradient_adjoint(num_dims)
 end
 
 
-function apply_gradient(f,x::AbstractArray{T,N}) where {T,N}
+function apply_grad(f,x::AbstractArray{T,N}) where {T,N}
 	sz = size(x)
 	Y = similar(x,sz...,N)
 	fill!(Y,T(0))
@@ -107,7 +133,7 @@ function apply_gradient(f,x::AbstractArray{T,N}) where {T,N}
 	return Y
 end
 
-function apply_gradient_adjoint(f,x::AbstractArray{T,N}) where {T,N}
+function apply_grad_adjoint(f,x::AbstractArray{T,N}) where {T,N}
 	sz = size(x)
 	Y = similar(x,sz[1:end-1])
 	fill!(Y,T(0))
