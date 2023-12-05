@@ -2,7 +2,7 @@
 
 ### SUM ###
 
-struct SumMap{I,O,D1<:AbstractMap{I,O},D2<:Union{Number,AbstractArray,AbstractMap{I,O}}} <:  AbstractMap{I,O}
+struct SumMap{I,O,D1<:AbstractMap,D2<:Union{Number,AbstractArray,AbstractMap}} <:  AbstractMap{I,O}
 	inputspace::I
 	outputspace::O
 	left::D1
@@ -14,6 +14,14 @@ function SumMap(A::D1, B::D2) where {I,O, D1<:AbstractMap{I,O},  D2<:AbstractMap
 	# FIXME should use some kind of promotion
 	insp  = inputspace(A)
 	outsp = outputspace(A)
+	return SumMap(insp,outsp,A,B)
+end
+
+
+function SumMap(A::D1, B::D2) where {I,OL,OR, D1<:AbstractMap{I,OL},  D2<:AbstractMap{I,OR}} 
+	# FIXME should use some kind of promotion
+	insp  = inputspace(A)
+	outsp = promote_space(outputspace(A), outputspace(B))
 	return SumMap(insp,outsp,A,B)
 end
 
@@ -38,8 +46,8 @@ add(A::AbstractMap, B::AbstractArray) = SumMap(A,B)
 
 #MapSum(A::AbstractMap,B) = throw(SimpleAlgebraFailure("Dimension or type mismatch in MapSum"))
 
-apply_(A::SumMap{I,O, D1,D2} ,x) where {I,O,D1<:AbstractMap{I,O},  D2<:AbstractMap{I,O}}= apply(A.left,x) .+ apply(A.right,x)
-apply_(A::SumMap{I,O, D1,D2} ,x) where {I,O,D1<:AbstractMap{I,O}, D2<:Union{Number,AbstractArray}} = apply(A.left,x) .+ A.right
+apply_(A::SumMap ,x) = A.left*x .+ A.right*x
+apply_(A::SumMap ,x)  = apply(A.left,x) .+ A.right
 
 
 ### Inverse ###
