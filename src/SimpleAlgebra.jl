@@ -12,6 +12,7 @@ export  AbstractDomain,
         CoordinateSpace,AbstractCoordinateSpace,
         inputspace, outputspace,
         inputsize, outputsize
+export  MapReduceSum
 export  AbstractLinOp, 
         LinOpConv, 
         LinOpDFT,

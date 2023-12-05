@@ -23,7 +23,7 @@ end
 MapReduceSum(sz::NTuple{N,Int},index) where {N} =  MapReduceSum(Number,sz,index)
 MapReduceSum(::Type{T},sz::NTuple{N,Int},index) where {T,N} = MapReduceSum(CoordinateSpace(T,sz),identity,index)
 MapReduceSum(inputspace::CoordinateSpace,index) = MapReduceSum(inputspace,identity,index)
-MapReduceSum(sz::NTuple{N,Int},f::Function,index) where {T,N} = MapReduceSum(CoordinateSpace(Number,sz), f,index)
+MapReduceSum(sz::NTuple{N,Int},f::Function,index) where {N} = MapReduceSum(CoordinateSpace(Number,sz), f,index)
 function MapReduceSum(inputspace::CoordinateSpace{T,N},f::Function,index) where {T,N}
 	index =  Tuple(unique(index))
 	szin = size(inputspace)
