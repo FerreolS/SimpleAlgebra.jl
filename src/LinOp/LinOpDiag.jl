@@ -41,24 +41,27 @@ struct LinOpScale{I<:CoordinateSpace,O<:CoordinateSpace,T} <:  AbstractLinOp{I,O
 	LinOpScale(inputspace::I,outputspace::O, scale::T) where {I<:CoordinateSpace,O<:CoordinateSpace,T<:Number} =  new{I,O,T}(inputspace,outputspace,scale)
 end
 
-@functor LinOpScale
+#@functor LinOpScale
 
-function LinOpScale(::Type{TI}, sz::NTuple{N,Int}, scale::T1) where {TI,T1,N}  
+function LinOpScale(inputspace::CoordinateSpace{TI,N}, scale::T1) where {TI,T1,N}  
 	if T1==TI
 		scale==oneunit(scale) && return LinOpIdentity(sz)
 	end
-	inputspace = CoordinateSpace(TI,sz)
 	TO = isconcretetype(TI) ? typeof(oneunit(TI) * oneunit(T1)) : TI
-	outputspace = CoordinateSpace(TO,sz)
+	outputspace = CoordinateSpace(TO,size(inputspace))
 	return LinOpScale(inputspace,outputspace, scale)
+end
+
+function LinOpScale(::Type{TI}, sz::NTuple, scale::Number) where {TI}  
+	inputspace = CoordinateSpace(TI,sz)
+	return LinOpScale(inputspace, scale)
 end
 LinOpScale(::Type{T},sz::Int, scale) where {T} = LinOpScale(T,Tuple(sz),scale)
 
 function LinOpScale(sz::NTuple{N,Int}, scale::T) where {T<:Number,N}
 	scale==oneunit(scale) && return LinOpIdentity(sz)
 	inputspace = CoordinateSpace(Number,sz)
-	outputspace = CoordinateSpace(Number,sz)
-    LinOpScale(inputspace,outputspace, scale)
+    LinOpScale(inputspace, scale)
 end
 LinOpScale(sz::Int, scale) = LinOpScale(Tuple(sz),scale)
 LinOpScale(scale) = LinOpScale((), scale)
@@ -93,6 +96,8 @@ add(A::LinOpScale , B::LinOpScale)  = LinOpScale(inputspace(A),outputspace(A), A
 
 inverse(A::LinOpScale) = LinOpScale(outputspace(A),inputspace(A), 1/A.scale )
 
+Adapt.adapt_storage(::Type{A}, x::LinOpScale{I,O,T}) where {I,O,T,A<:AbstractArray{T}} = x 
+Adapt.adapt_storage(::Type{A}, x::LinOpScale{I,O,Tx}) where {I,O,T,Tx,A<:AbstractArray{T}} =  LinOpScale(inputspace(x),T(x.scale))
 
 ### DIAGONAL (element-wise multiplication) 
 
@@ -165,3 +170,7 @@ Base.:\(A::LinOpDiag{I,O,D1}, B::LinOpDiag{I,O,D2})   where {I,O,D1,D2} = LinOpD
 Base.:/(A::LinOpDiag{I,O,D1}, B::LinOpDiag{I,O,D2})   where {I,O,D1,D2} = LinOpDiag(inputspace(A),outputspace(A),@. A.diag / B.diag)
 
 inverse(A::LinOpDiag{I,O,D}) where {T,I,O,D<:AbstractArray{T}} = LinOpDiag(outputspace(A),inputspace(A), one(T)./(A.diag) )
+
+
+#Adapt.adapt_storage(::Type{AbstractArray{T}}, x::LinOpScale{I,O,D}) where {I,O,T,D<:AbstractArray{T}} = x 
+#Adapt.adapt_storage(::Type{AbstractArray{T}}, x::LinOpScale{I,O,D}) where {I,O,T,Tx,D<:AbstractArray{Tx}} =  LinOpScale(inputspace(x),T(x.scale))
