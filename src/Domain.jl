@@ -44,3 +44,6 @@ Base.issubset(::Type{<:AbstractDomain},::Type{<:AbstractDomain}) = false
  Base.ones(sp::CoordinateSpace{T,N}) where {T,N} = zeros(T,size(sp))
  Base.zeros(::Type{T},sp::CoordinateSpace{N}) where {T,N} = zeros(T,size(sp))
  Base.ones(::Type{T},sp::CoordinateSpace{N}) where {T,N} = zeros(T,size(sp))
+
+promote_space(args...)  = 
+ 	CoordinateSpace(promote_type(map(eltype,args)...),map(x -> size(x)[1], Broadcast.combine_axes(args...)) )
