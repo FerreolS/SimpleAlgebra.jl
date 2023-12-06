@@ -47,7 +47,7 @@ add(A::AbstractMap, B::AbstractArray) = SumMap(A,B)
 #MapSum(A::AbstractMap,B) = throw(SimpleAlgebraFailure("Dimension or type mismatch in MapSum"))
 
 apply_(A::SumMap ,x)  = A.left(x) .+ A.right(x)
-apply_(A::SumMap{I,O, D1,D2} ,x) where {I,O,D1<:AbstractMap{I,O}, D2<:Union{Number,AbstractArray}} = A.left*x .+ A.right
+apply_(A::SumMap{I,O, D1,D2} ,x) where {I,O,D1<:AbstractMap, D2<:Union{Number,AbstractArray}} = A.left*x .+ A.right
 
 
 ### Inverse ###
