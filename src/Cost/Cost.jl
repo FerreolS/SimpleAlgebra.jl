@@ -34,3 +34,4 @@ apply_(A::CostComposition, v) = apply(A.left,apply(A.right,v))
 
 
 include("./CostL2.jl")
+include("./CostHyperbolic.jl")

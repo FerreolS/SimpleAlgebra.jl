@@ -21,7 +21,8 @@ export  AbstractLinOp,
         LinOpDiag,
         LinOpSelect,
         LinOpGrad
-export CostL2
+export CostL2,
+    CostHyperbolic
 
 
 struct SimpleAlgebraFailure <: Exception
