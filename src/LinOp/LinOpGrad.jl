@@ -9,8 +9,8 @@ struct LinOpGrad{I,O,FA<:Function,FT<:Function} <:  AbstractLinOp{I,O}
 	function LinOpGrad(inputspace::I) where {I<:AbstractDomain}
 		N = ndims(inputspace)
 		outputspace = CoordinateSpace(eltype(inputspace), (size(inputspace)...,N))
-		functionapply = generate_gradient_tullio(N)
-		functionadjoint = generate_gradient_adjoint_tullio(N)
+		functionapply = @eval (Y,X) -> ($(generate_gradient_tullio(N)...))
+		functionadjoint = @eval (Y,X) -> ($(generate_gradient_adjoint_tullio(N)...))
     	return new{I,typeof(outputspace),typeof(functionapply),typeof(functionadjoint)}(inputspace,outputspace,functionapply,functionadjoint)
 	end
 end 
@@ -76,8 +76,10 @@ function generate_gradient_tullio(num_dims)
 		push!(out, :(@tullio  Y[$(idx2...),$d] = X[$(idx2...)] - X[$(idx1...)];))
 	end
 	push!(out, :( return Y;))
-    return @eval (Y,X) -> ($(out...))
+	return out
+    #return @eval (Y,X) -> ($(out...))
 end
+
 
 
 function generate_gradient_adjoint_tullio(num_dims)
@@ -92,8 +94,8 @@ function generate_gradient_adjoint_tullio(num_dims)
 		push!(out, :(@tullio  Y[$(llast...  )] += -X[$(llast...  ),$d];))
 	end
 	push!(out, :( return Y;))
-	#return out
-   	return @eval (Y,X) -> ($(out...))
+	return out
+   	#return @eval (Y,X) -> ($(out...))
 end
 
 
@@ -129,7 +131,7 @@ function apply_grad(f,x::AbstractArray{T,N}) where {T,N}
 	sz = size(x)
 	Y = similar(x,sz...,N)
 	fill!(Y,T(0))
-	f(Y,x)
+	@invokelatest f(Y,x)
 	return Y
 end
 
@@ -137,7 +139,7 @@ function apply_grad_adjoint(f,x::AbstractArray{T,N}) where {T,N}
 	sz = size(x)
 	Y = similar(x,sz[1:end-1])
 	fill!(Y,T(0))
-	f(Y,x)
+	@invokelatest f(Y,x)
 	return Y
 end
 
