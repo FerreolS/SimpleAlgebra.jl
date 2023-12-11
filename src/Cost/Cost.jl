@@ -29,6 +29,7 @@ inputspace(A::CostComposition)  = inputspace(A.right)
 compose(::AbstractCost, ::AbstractMap) = throw(SimpleAlgebraFailure("The output of the Map does not match the input of the cost"))
  =#
 compose(A::AbstractCost, B::AbstractMap) =CostComposition(A, B) 
+compose(A::CostComposition, B::AbstractMap) =CostComposition(A.left, A.right*B) 
 
 apply_(A::CostComposition, v) = apply(A.left,apply(A.right,v))
 
