@@ -1,19 +1,13 @@
 
-using Tullio
+using  LoopVectorization,Tullio
 
-struct LinOpGrad{I,O,FA<:Function,FT<:Function} <:  AbstractLinOp{I,O}
+struct LinOpGrad{I,O} <:  AbstractLinOp{I,O}
     inputspace::I
 	outputspace::O
-	functionapply::FA
-	functionadjoint::FT
 	function LinOpGrad(inputspace::I) where {I<:AbstractDomain}
 		N = ndims(inputspace)
 		outputspace = CoordinateSpace(eltype(inputspace), (size(inputspace)...,N))
-		#functionapply = @eval (Y,X) -> ($(generate_gradient_tullio(N)...))
-		#functionadjoint = @eval (Y,X) -> ($(generate_gradient_adjoint_tullio(N)...))
-		functionapply = @eval (Y,X) -> ($(generate_gradient(N)...))
-		functionadjoint = @eval (Y,X) -> ($(generate_gradient_adjoint(N)...))
-    	return new{I,typeof(outputspace),typeof(functionapply),typeof(functionadjoint)}(inputspace,outputspace,functionapply,functionadjoint)
+    	return new{I,typeof(outputspace),}(inputspace,outputspace)
 	end
 end 
 
@@ -23,11 +17,165 @@ LinOpGrad(::Type{TI}, sz::Int) where TI 	= LinOpGrad(TI,Tuple(sz))
 LinOpGrad(::Type{TI}, sz::NTuple) where TI 	= LinOpGrad(CoordinateSpace(TI,sz))
 LinOpGrad(::Type{TI}, inputspace::CoordinateSpace) where TI = LinOpGrad(CoordinateSpace(TI,inputspace))
 
-apply_(A::LinOpGrad, x)  = apply_grad(A.functionapply, x)
+apply_(A::LinOpGrad, x)  = compute_gradient(x)
 
-apply_adjoint_(A::LinOpGrad, x) =  apply_grad_adjoint(A.functionadjoint,x)
+apply_adjoint_(A::LinOpGrad, x) =  compute_gradient_adjoint(x)
+
+function compute_gradient(x::AbstractArray{T,N}) where {T,N}
+    sz = size(x)
+	Y = similar(x,sz...,N)
+	compute_gradient!(Y,x)
+end
 
 
+function compute_gradient_adjoint(x::AbstractArray{T,N}) where {T,N}
+	sz = size(x)
+	Y = similar(x,sz[1:end-1])
+	compute_gradient_adjoint!(Y,x)
+end
+
+
+@generated function compute_gradient!(Y::AbstractArray{T,M},X::AbstractArray{T,N}) where {M,N,T}
+	M != N+1 && throw(SimpleAlgebraFailure("LinOpGrad output must have one more dimensions than the input"))
+	code =Expr(:block)
+	push!(code,:(fill!(Y,zero(T))))
+	for d = 1:N
+		left = (i==d ? :(1:size(X,$i)-1) : :(Colon()) for i=1:N)
+		right = (i==d ? :(2:size(X,$i)) : :(Colon()) for i=1:N)
+		push!(code.args, :( @inbounds Y[$(left...),$d] .= X[$(left...)] .- X[$(right...)]))
+	end
+	return code 
+end
+
+# FIXME  use generated even with LoopVectorization
+function compute_gradient!(Y::AbstractArray{T,2},X::AbstractArray{T,1}) where {T} 
+	fill!(Y,zero(T))
+	t1,= size(X)
+		@turbo check_empty=true  for i1 = 1:(t1-1)
+			Y[i1, 1] = X[i1] - X[i1 + 1]
+		end
+end
+
+
+function compute_gradient!(Y::AbstractArray{T,3},X::AbstractArray{T,2}) where {T} 
+	fill!(Y,zero(T))
+	t1,t2 = size(X)
+		@tturbo check_empty=true for i2 = 1:t2-1
+			for i1 = 1:(t1-1)
+				Y[i1, i2, 1] = X[i1, i2] - X[i1 + 1, i2]
+				Y[i1, i2, 2] = X[i1, i2] - X[i1, i2 + 1]
+			end
+			Y[t1, i2, 2] = X[t1, i2] - X[t1, i2 + 1]
+		end
+		@turbo for i1 = 1:(t1-1)
+			Y[i1, t2, 1] = X[i1, t2] - X[i1 + 1, t2]
+		end
+end
+
+function compute_gradient!(Y::AbstractArray{T,4},X::AbstractArray{T,3}) where {T} 
+	fill!(Y,zero(T))
+	t1,t2,t3 = size(X)
+	@tturbo check_empty=true for i3 = 1:t3-1
+		for i2 = 1:t2-1
+			for i1 = 1:(t1-1)
+				Y[i1, i2,i3, 1] = X[i1, i2,i3] - X[i1 + 1, i2,i3]
+				Y[i1, i2,i3, 2] = X[i1, i2,i3] - X[i1, i2 + 1,i3]
+				Y[i1, i2,i3, 3] = X[i1, i2,i3] - X[i1,i2, i3 + 1]
+			end
+			Y[t1, i2,i3, 2] = X[t1, i2,i3] - X[t1, i2 + 1,i3]
+			Y[t1, i2,i3, 3] = X[t1, i2,i3] - X[t1, i2 ,i3 + 1]
+		end
+		for i1 = 1:(t1-1)
+			Y[i1, t2,i3, 1] = X[i1, t2,i3] - X[i1 + 1, t2,i3]
+			Y[i1, t2,i3, 3] = X[i1, t2,i3] - X[i1, t2 ,i3 + 1]
+		end
+		Y[t1, t2,i3, 3] = X[t1, t2,i3] - X[t1, t2 ,i3 + 1]
+	end
+	@turbo for i2 = 1:t2-1
+		for i1 = 1:(t1-1)
+			Y[i1, i2, t3, 1] = X[i1, i2, t3] - X[i1 + 1, i2, t3]
+			Y[i1, i2, t3, 2] = X[i1, i2, t3] - X[i1, i2 + 1, t3]
+		end
+		Y[t1, i2,t3, 2] = X[t1, i2,t3] - X[t1, i2 + 1,t3]
+	end
+	@turbo for i1 = 1:(t1-1)
+		Y[i1, t2, t3, 1] = X[i1, t2, t3] - X[i1 + 1, t2, t3]
+	end
+	
+end
+
+
+
+@generated function compute_gradient_adjoint!(Y::AbstractArray{T,N},X::AbstractArray{T,M}) where {M,N,T}
+	N != M-1 && throw(SimpleAlgebraFailure("LinOpGrad output must have one more dimensions than the input"))
+	code =Expr(:block)
+	push!(code,:(fill!(Y,zero(T))))
+	for d = 1:N
+		left = (i==d ? :(1: (size(X,$i)-1)) : :(Colon()) for i=1:N)
+		right = (i==d ? :(2: (size(X,$i))) : :(Colon()) for i=1:N)
+		push!(code.args, :( @inbounds  Y[$(left...)] .+= X[$(left...),$d];))
+		push!(code.args, :( @inbounds   Y[$(right...)] .-= X[$(left...),$d];))
+	end 
+   return code
+end
+
+# FIXME  use generated even with LoopVectorization
+function compute_gradient_adjoint!(Y::AbstractArray{T,1},X::AbstractArray{T,2}) where {T} 
+	fill!(Y,zero(T))
+	t1,= size(Y)
+		 for i1 = 1:(t1-1)
+			Y[i1] += X[i1,1] 
+			Y[i1 + 1] -= X[i1,1]
+		end
+end
+
+
+function compute_gradient_adjoint!(Y::AbstractArray{T,2},X::AbstractArray{T,3}) where {T} 
+	fill!(Y,zero(T))
+	t1,t2 = size(X)
+	@turbo check_empty=true  for i2 = 1:(t2-1)
+			for i1 = 1:(t1-1)
+				Y[i1,i2] += X[i1,i2,1] 
+				Y[i1 + 1,i2] -= X[i1,i2,1]
+				Y[i1,i2] += X[i1,i2,2] 
+				Y[i1,i2 + 1] -= X[i1,i2,2]
+			end
+			Y[t1,i2] += X[t1,i2,2] 
+			Y[t1,i2 + 1] -= X[t1,i2,2]
+
+		end
+		for i1 = 1:(t1-1)
+			Y[i1,t2] += X[i1,t2,1] 
+			Y[i1 + 1,t2] -= X[i1,t2,1]
+		end
+			
+end
+
+
+
+
+function ChainRulesCore.rrule( ::typeof(apply_),A::LinOpGrad, v)
+	LinOpGrad_pullback(Δy) = (NoTangent(),NoTangent(), apply_adjoint_(A, Δy))
+    return  apply_(A,v), LinOpGrad_pullback
+end
+
+
+#= 
+
+
+function gradient_generated3(Y::AbstractArray{T,4},X::AbstractArray{T,3}) where {T} 
+	t1,t2,t3 = size(X)
+	@inbounds 	@fastmath for i3 = 1:t3 # no @turbo because of &&
+		for i2 = 1:t2
+			for i1 = 1:t1
+				(i1 != t1) && (Y[i1, i2,i3, 1] = X[i1, i2,i3] - X[i1 + 1, i2,i3])
+				(i2 != t2) && (Y[i1, i2,i3, 2] = X[i1, i2,i3] - X[i1, i2 + 1,i3])
+				(i3 != t3) && (Y[i1, i2,i3, 3] = X[i1, i2,i3] - X[i1,i2, i3 + 1])
+			end
+		end
+		
+	end
+end
 
 """
 Adapted from https://github.com/roflmaostc/DeconvOptim.jl/blob/master/src/regularizer.jl
@@ -78,8 +226,8 @@ function generate_gradient_tullio(num_dims)
 		push!(out, :(@tullio  Y[$(idx2...),$d] = X[$(idx2...)] - X[$(idx1...)];))
 	end
 	push!(out, :( return Y;))
-	return out
-    #return @eval (Y,X) -> ($(out...))
+	#return out
+    return @eval (Y,X) -> ($(out...))
 end
 
 
@@ -96,8 +244,8 @@ function generate_gradient_adjoint_tullio(num_dims)
 		push!(out, :(@tullio  Y[$(llast...  )] += -X[$(llast...  ),$d];))
 	end
 	push!(out, :( return Y;))
-	return out
-   	#return @eval (Y,X) -> ($(out...))
+	#return out
+   	return @eval (Y,X) -> ($(out...))
 end
 
 
@@ -111,7 +259,7 @@ function generate_gradient(num_dims)
 		push!(out, :( @inbounds Y[$(left...),$d] .= X[$(left...)] .- X[$(right...)];))
 	end 
 	push!(out, :( return Y;))
-	return out
+#	return out
    return @eval (Y,X) -> ($(out...))
 end
 
@@ -126,7 +274,7 @@ function generate_gradient_adjoint(num_dims)
 		push!(out, :( @inbounds  Y[$(right...)] .-= X[$(left...),$d];))
 	end 
 	push!(out, :( return Y;))
-	return out
+#	return out
    return @eval (Y,X) -> ($(out...))
 end
 
@@ -146,9 +294,4 @@ function apply_grad_adjoint(f,x::AbstractArray{T,N}) where {T,N}
 	@invokelatest f(Y,x)
 	return Y
 end
-
-
-function ChainRulesCore.rrule( ::typeof(apply_),A::LinOpGrad, v)
-	LinOpGrad_pullback(Δy) = (NoTangent(),NoTangent(), apply_adjoint_(A, Δy))
-    return  apply_(A,v), LinOpGrad_pullback
-end
+ =#
