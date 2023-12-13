@@ -24,6 +24,7 @@ function compute_gradient(x::AbstractArray{T,N}) where {T,N}
     sz = size(x)
 	Y = similar(x,sz...,N)
 	compute_gradient!(Y,x)
+	return Y
 end
 
 
@@ -31,6 +32,7 @@ function compute_gradient_adjoint(x::AbstractArray{T,N}) where {T,N}
 	sz = size(x)
 	Y = similar(x,sz[1:end-1])
 	compute_gradient_adjoint!(Y,x)
+	return Y
 end
 
 
