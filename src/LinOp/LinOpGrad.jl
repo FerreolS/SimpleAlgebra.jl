@@ -9,8 +9,10 @@ struct LinOpGrad{I,O,FA<:Function,FT<:Function} <:  AbstractLinOp{I,O}
 	function LinOpGrad(inputspace::I) where {I<:AbstractDomain}
 		N = ndims(inputspace)
 		outputspace = CoordinateSpace(eltype(inputspace), (size(inputspace)...,N))
-		functionapply = @eval (Y,X) -> ($(generate_gradient_tullio(N)...))
-		functionadjoint = @eval (Y,X) -> ($(generate_gradient_adjoint_tullio(N)...))
+		#functionapply = @eval (Y,X) -> ($(generate_gradient_tullio(N)...))
+		#functionadjoint = @eval (Y,X) -> ($(generate_gradient_adjoint_tullio(N)...))
+		functionapply = @eval (Y,X) -> ($(generate_gradient(N)...))
+		functionadjoint = @eval (Y,X) -> ($(generate_gradient_adjoint(N)...))
     	return new{I,typeof(outputspace),typeof(functionapply),typeof(functionadjoint)}(inputspace,outputspace,functionapply,functionadjoint)
 	end
 end 
@@ -106,9 +108,10 @@ function generate_gradient(num_dims)
 
 		left = (i==d ? :(1:size(X,$i)-1) : :(Colon()) for i=1:num_dims)
 		right = (i==d ? :(2:size(X,$i)) : :(Colon()) for i=1:num_dims)
-		push!(out, :(Y[$(left...),$d] .= X[$(left...)] .- X[$(right...)];))
+		push!(out, :( @inbounds Y[$(left...),$d] .= X[$(left...)] .- X[$(right...)];))
 	end 
 	push!(out, :( return Y;))
+	return out
    return @eval (Y,X) -> ($(out...))
 end
 
@@ -119,10 +122,11 @@ function generate_gradient_adjoint(num_dims)
 
 		left = (i==d ? :(1: (size(X,$i)-1)) : :(Colon()) for i=1:num_dims)
 		right = (i==d ? :(2: (size(X,$i))) : :(Colon()) for i=1:num_dims)
-		push!(out, :( Y[$(left...)] .+= X[$(left...),$d];))
-		push!(out, :(  Y[$(right...)] .-= X[$(left...),$d];))
+		push!(out, :(@inbounds  Y[$(left...)] .+= X[$(left...),$d];))
+		push!(out, :( @inbounds  Y[$(right...)] .-= X[$(left...),$d];))
 	end 
 	push!(out, :( return Y;))
+	return out
    return @eval (Y,X) -> ($(out...))
 end
 
