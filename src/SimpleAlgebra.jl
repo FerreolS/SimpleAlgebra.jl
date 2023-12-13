@@ -6,6 +6,8 @@ using Functors
 using Adapt
 using InverseFunctions
 import InverseFunctions:inverse
+using  LoopVectorization
+
 
 export  AbstractMap,AbstractCost
 export  AbstractDomain,

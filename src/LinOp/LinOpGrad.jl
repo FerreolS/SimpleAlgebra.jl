@@ -1,5 +1,4 @@
 
-using  LoopVectorization,Tullio
 
 struct LinOpGrad{I,O} <:  AbstractLinOp{I,O}
     inputspace::I
@@ -17,9 +16,9 @@ LinOpGrad(::Type{TI}, sz::Int) where TI 	= LinOpGrad(TI,Tuple(sz))
 LinOpGrad(::Type{TI}, sz::NTuple) where TI 	= LinOpGrad(CoordinateSpace(TI,sz))
 LinOpGrad(::Type{TI}, inputspace::CoordinateSpace) where TI = LinOpGrad(CoordinateSpace(TI,inputspace))
 
-apply_(A::LinOpGrad, x)  = compute_gradient(x)
+apply_(::LinOpGrad, x)  = compute_gradient(x)
 
-apply_adjoint_(A::LinOpGrad, x) =  compute_gradient_adjoint(x)
+apply_adjoint_(::LinOpGrad, x) =  compute_gradient_adjoint(x)
 
 function compute_gradient(x::AbstractArray{T,N}) where {T,N}
     sz = size(x)
