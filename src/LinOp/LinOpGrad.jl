@@ -39,7 +39,7 @@ end
 @generated function compute_gradient!(Y::AbstractArray{T,M},X::AbstractArray{T,N}) where {M,N,T}
 	M != N+1 && throw(SimpleAlgebraFailure("LinOpGrad output must have one more dimensions than the input"))
 	code =Expr(:block)
-	push!(code,:(fill!(Y,zero(T))))
+	push!(code.args,:(fill!(Y,zero(T))))
 	for d = 1:N
 		left = (i==d ? :(1:size(X,$i)-1) : :(Colon()) for i=1:N)
 		right = (i==d ? :(2:size(X,$i)) : :(Colon()) for i=1:N)
@@ -52,7 +52,7 @@ end
 function compute_gradient!(Y::AbstractArray{T,2},X::AbstractArray{T,1}) where {T} 
 	fill!(Y,zero(T))
 	t1,= size(X)
-		@turbo check_empty=true  for i1 = 1:(t1-1)
+		@turbo check_empty=true warn_check_args=false for i1 = 1:(t1-1)
 			Y[i1, 1] = X[i1] - X[i1 + 1]
 		end
 end
@@ -61,14 +61,14 @@ end
 function compute_gradient!(Y::AbstractArray{T,3},X::AbstractArray{T,2}) where {T} 
 	fill!(Y,zero(T))
 	t1,t2 = size(X)
-		@tturbo check_empty=true for i2 = 1:t2-1
+		@tturbo check_empty=true warn_check_args=false for i2 = 1:t2-1
 			for i1 = 1:(t1-1)
 				Y[i1, i2, 1] = X[i1, i2] - X[i1 + 1, i2]
 				Y[i1, i2, 2] = X[i1, i2] - X[i1, i2 + 1]
 			end
 			Y[t1, i2, 2] = X[t1, i2] - X[t1, i2 + 1]
 		end
-		@turbo for i1 = 1:(t1-1)
+		@turbo warn_check_args=false for i1 = 1:(t1-1)
 			Y[i1, t2, 1] = X[i1, t2] - X[i1 + 1, t2]
 		end
 end
@@ -76,7 +76,7 @@ end
 function compute_gradient!(Y::AbstractArray{T,4},X::AbstractArray{T,3}) where {T} 
 	fill!(Y,zero(T))
 	t1,t2,t3 = size(X)
-	@tturbo check_empty=true for i3 = 1:t3-1
+	@tturbo check_empty=true warn_check_args=false for i3 = 1:t3-1
 		for i2 = 1:t2-1
 			for i1 = 1:(t1-1)
 				Y[i1, i2,i3, 1] = X[i1, i2,i3] - X[i1 + 1, i2,i3]
@@ -92,14 +92,14 @@ function compute_gradient!(Y::AbstractArray{T,4},X::AbstractArray{T,3}) where {T
 		end
 		Y[t1, t2,i3, 3] = X[t1, t2,i3] - X[t1, t2 ,i3 + 1]
 	end
-	@turbo for i2 = 1:t2-1
+	@turbo warn_check_args=false for i2 = 1:t2-1
 		for i1 = 1:(t1-1)
 			Y[i1, i2, t3, 1] = X[i1, i2, t3] - X[i1 + 1, i2, t3]
 			Y[i1, i2, t3, 2] = X[i1, i2, t3] - X[i1, i2 + 1, t3]
 		end
 		Y[t1, i2,t3, 2] = X[t1, i2,t3] - X[t1, i2 + 1,t3]
 	end
-	@turbo for i1 = 1:(t1-1)
+	@turbo warn_check_args=false for i1 = 1:(t1-1)
 		Y[i1, t2, t3, 1] = X[i1, t2, t3] - X[i1 + 1, t2, t3]
 	end
 	
@@ -110,7 +110,7 @@ end
 @generated function compute_gradient_adjoint!(Y::AbstractArray{T,N},X::AbstractArray{T,M}) where {M,N,T}
 	N != M-1 && throw(SimpleAlgebraFailure("LinOpGrad output must have one more dimensions than the input"))
 	code =Expr(:block)
-	push!(code,:(fill!(Y,zero(T))))
+	push!(code.args,:(fill!(Y,zero(T))))
 	for d = 1:N
 		left = (i==d ? :(1: (size(X,$i)-1)) : :(Colon()) for i=1:N)
 		right = (i==d ? :(2: (size(X,$i))) : :(Colon()) for i=1:N)
@@ -134,7 +134,7 @@ end
 function compute_gradient_adjoint!(Y::AbstractArray{T,2},X::AbstractArray{T,3}) where {T} 
 	fill!(Y,zero(T))
 	t1,t2 = size(X)
-	@turbo check_empty=true  for i2 = 1:(t2-1)
+	@turbo warn_check_args=false check_empty=true  for i2 = 1:(t2-1)
 			for i1 = 1:(t1-1)
 				Y[i1,i2] += X[i1,i2,1] 
 				Y[i1 + 1,i2] -= X[i1,i2,1]
