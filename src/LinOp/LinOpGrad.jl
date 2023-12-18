@@ -191,7 +191,7 @@ function  difX(N, d, offset)
 	# workgroup size
 	#wrk = zeros(Int,N)
 	#wrk[d] = 512
-	push!(code.args,:(($(Symbol("dif$d")))(get_backend(X),512)(Y,X,ndrange=(size(X) .- $(tuple(indices...))))))
+	push!(code.args,:(($(Symbol("dif$d")))(get_backend(X))(Y,X,ndrange=(size(X) .- $(tuple(indices...))))))
 	return code
 end
 
@@ -208,7 +208,7 @@ function  difX_adjoint(N, d, offset)
 	# workgroup size
 	#wrk = zeros(Int,N)
 	#wrk[d] = 512
-	push!(code.args,:(($(Symbol("dif$(d)_adjoint")))(get_backend(X),512)(Y,X,ndrange=(size(Y) .- $(tuple(indices...))))))
+	push!(code.args,:(($(Symbol("dif$(d)_adjoint")))(get_backend(X))(Y,X,ndrange=(size(Y) .- $(tuple(indices...))))))
 	return code
 end
 
