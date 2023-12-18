@@ -50,7 +50,7 @@ end
 
 # FIXME  use generated even with LoopVectorization
 function compute_gradient!(Y::AbstractArray{T,2},X::AbstractArray{T,1}) where {T} 
-	fill!(Y,zero(T))
+	Y[end] = zero(T)
 	t1,= size(X)
 		@turbo check_empty=true warn_check_args=false for i1 = 1:(t1-1)
 			Y[i1, 1] = X[i1] - X[i1 + 1]
@@ -155,28 +155,55 @@ end
 
 
 
+
+function compute_gradientKA!(Y::AbstractArray{T,M},X::AbstractArray{T,N}) where {M,N,T}
+	M != N+1 && throw(SimpleAlgebraFailure("LinOpGrad output must have one more dimensions than the input"))
+	code =Expr(:block)
+	push!(code.args,:(fill!(Y,zero($T))))
+	for d = 1:N
+		push!(code.args, (SimpleAlgebra.difX(N,d,1)))
+	end
+	push!(code.args,:(synchronize(get_backend(X))))
+	push!(code.args,:(return Y))
+	return code 
+end
+
+function generate_indices(num_dims, d, offset)
+	indices = zeros(Int,num_dims)
+	indices[d] = offset
+	return indices
+end
+
+
+ function  difX(N, d, offset) 
+	code =Expr(:block)
+	indices =generate_indices(N, d, offset) 
+	Id = CartesianIndex(indices...)
+	push!(code.args,:(@kernel function ($(Symbol("dif$d")))(Y, X) 
+		I = @index(Global, Cartesian)
+		Y[I,$d] = X[I] - X[I + $Id]
+	end))
+	# workgroup size
+	#wrk = zeros(Int,N)
+	#wrk[d] = 512
+	push!(code.args,:(($(Symbol("dif$d")))(get_backend(X),512)(Y,X,ndrange=(size(X) .- $(tuple(indices...))))))
+	return code
+end
+
+
 function ChainRulesCore.rrule( ::typeof(apply_),A::LinOpGrad, v)
 	LinOpGrad_pullback(Δy) = (NoTangent(),NoTangent(), apply_adjoint_(A, Δy))
     return  apply_(A,v), LinOpGrad_pullback
 end
 
 
+
+
+
+
+
 #= 
 
-
-function gradient_generated3(Y::AbstractArray{T,4},X::AbstractArray{T,3}) where {T} 
-	t1,t2,t3 = size(X)
-	@inbounds 	@fastmath for i3 = 1:t3 # no @turbo because of &&
-		for i2 = 1:t2
-			for i1 = 1:t1
-				(i1 != t1) && (Y[i1, i2,i3, 1] = X[i1, i2,i3] - X[i1 + 1, i2,i3])
-				(i2 != t2) && (Y[i1, i2,i3, 2] = X[i1, i2,i3] - X[i1, i2 + 1,i3])
-				(i3 != t3) && (Y[i1, i2,i3, 3] = X[i1, i2,i3] - X[i1,i2, i3 + 1])
-			end
-		end
-		
-	end
-end
 
 """
 Adapted from https://github.com/roflmaostc/DeconvOptim.jl/blob/master/src/regularizer.jl
@@ -218,7 +245,6 @@ function select_indices(num_dims, d, value)
 end
 
 
-
 function generate_gradient_tullio(num_dims)
 	out =[]
 	for d = 1:num_dims
@@ -227,10 +253,9 @@ function generate_gradient_tullio(num_dims)
 		push!(out, :(@tullio  Y[$(idx2...),$d] = X[$(idx2...)] - X[$(idx1...)];))
 	end
 	push!(out, :( return Y;))
-	#return out
+	return out
     return @eval (Y,X) -> ($(out...))
 end
-
 
 
 function generate_gradient_adjoint_tullio(num_dims)
@@ -294,5 +319,22 @@ function apply_grad_adjoint(f,x::AbstractArray{T,N}) where {T,N}
 	fill!(Y,T(0))
 	@invokelatest f(Y,x)
 	return Y
+end
+
+
+
+
+function gradient_generated3(Y::AbstractArray{T,4},X::AbstractArray{T,3}) where {T} 
+	t1,t2,t3 = size(X)
+	@inbounds 	@fastmath for i3 = 1:t3 # no @turbo because of &&
+		for i2 = 1:t2
+			for i1 = 1:t1
+				(i1 != t1) && (Y[i1, i2,i3, 1] = X[i1, i2,i3] - X[i1 + 1, i2,i3])
+				(i2 != t2) && (Y[i1, i2,i3, 2] = X[i1, i2,i3] - X[i1, i2 + 1,i3])
+				(i3 != t3) && (Y[i1, i2,i3, 3] = X[i1, i2,i3] - X[i1,i2, i3 + 1])
+			end
+		end
+		
+	end
 end
  =#

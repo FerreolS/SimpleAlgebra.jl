@@ -7,6 +7,7 @@ using Adapt
 using InverseFunctions
 import InverseFunctions:inverse
 using  LoopVectorization
+using  KernelAbstractions
 
 
 export  AbstractMap,AbstractCost
