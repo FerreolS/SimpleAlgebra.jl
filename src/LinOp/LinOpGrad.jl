@@ -1,12 +1,18 @@
 
 
-struct LinOpGrad{I,O} <:  AbstractLinOp{I,O}
+struct LinOpGrad{I,O,F,FA} <:  AbstractLinOp{I,O}
     inputspace::I
 	outputspace::O
+	gradfunc::F
+	gradfuncadj::FA
 	function LinOpGrad(inputspace::I) where {I<:AbstractDomain}
 		N = ndims(inputspace)
 		outputspace = CoordinateSpace(eltype(inputspace), (size(inputspace)...,N))
-    	return new{I,typeof(outputspace),}(inputspace,outputspace)
+		F =  @eval (Y,X) -> $(compute_gradientKA!(N))
+		FA = @eval (Y,X) -> $(compute_gradient_adjointKA!(N))
+#		F =  compute_gradient!
+#		FA = compute_gradient_adjoint!
+    	return new{I,typeof(outputspace),typeof(F),typeof(FA)}(inputspace,outputspace,F,FA)
 	end
 end 
 
@@ -16,22 +22,22 @@ LinOpGrad(::Type{TI}, sz::Int) where TI 	= LinOpGrad(TI,Tuple(sz))
 LinOpGrad(::Type{TI}, sz::NTuple) where TI 	= LinOpGrad(CoordinateSpace(TI,sz))
 LinOpGrad(::Type{TI}, inputspace::CoordinateSpace) where TI = LinOpGrad(CoordinateSpace(TI,inputspace))
 
-apply_(::LinOpGrad, x)  = compute_gradient(x)
+apply_(A::LinOpGrad, x)  = compute_gradient(A.gradfunc,x)
 
-apply_adjoint_(::LinOpGrad, x) =  compute_gradient_adjoint(x)
+apply_adjoint_(A::LinOpGrad, x) =  compute_gradient_adjoint(A.gradfuncadj,x)
 
-function compute_gradient(x::AbstractArray{T,N}) where {T,N}
+function compute_gradient(f,x::AbstractArray{T,N}) where {T,N}
     sz = size(x)
 	Y = similar(x,sz...,N)
-	compute_gradient!(Y,x)
+	f(Y,x)
 	return Y
 end
 
 
-function compute_gradient_adjoint(x::AbstractArray{T,N}) where {T,N}
+function compute_gradient_adjoint(f,x::AbstractArray{T,N}) where {T,N}
 	sz = size(x)
 	Y = similar(x,sz[1:end-1])
-	compute_gradient_adjoint!(Y,x)
+	f(Y,x)
 	return Y
 end
 
@@ -156,10 +162,9 @@ end
 
 
 
-function compute_gradientKA!(Y::AbstractArray{T,M},X::AbstractArray{T,N}) where {M,N,T}
-	M != N+1 && throw(SimpleAlgebraFailure("LinOpGrad output must have one more dimensions than the input"))
+function compute_gradientKA!(N) 
 	code =Expr(:block)
-	push!(code.args,:(fill!(Y,zero($T))))
+	push!(code.args,:(fill!(Y,zero(eltype(Y)))))
 	for d = 1:N
 		push!(code.args, (SimpleAlgebra.difX(N,d,1)))
 	end
@@ -175,7 +180,7 @@ function generate_indices(num_dims, d, offset)
 end
 
 
- function  difX(N, d, offset) 
+function  difX(N, d, offset) 
 	code =Expr(:block)
 	indices =generate_indices(N, d, offset) 
 	Id = CartesianIndex(indices...)
@@ -190,6 +195,34 @@ end
 	return code
 end
 
+
+function  difX_adjoint(N, d, offset) 
+	code =Expr(:block)
+	indices =generate_indices(N, d, offset) 
+	Id = CartesianIndex(indices...)
+	push!(code.args,:(@kernel function ($(Symbol("dif$(d)_adjoint")))(Y, X) 
+		I = @index(Global, Cartesian)
+		Y[I] += X[I,$d]
+		Y[I + $Id] -= X[I,$d]
+	end))
+	# workgroup size
+	#wrk = zeros(Int,N)
+	#wrk[d] = 512
+	push!(code.args,:(($(Symbol("dif$(d)_adjoint")))(get_backend(X),512)(Y,X,ndrange=(size(Y) .- $(tuple(indices...))))))
+	return code
+end
+
+
+function compute_gradient_adjointKA!(N)
+	code =Expr(:block)
+	push!(code.args,:(fill!(Y,zero(eltype(Y)))))
+	for d = 1:N
+		push!(code.args, (SimpleAlgebra.difX_adjoint(N,d,1)))
+	end
+	push!(code.args,:(synchronize(get_backend(X))))
+	push!(code.args,:(return Y))
+	return code 
+end
 
 function ChainRulesCore.rrule( ::typeof(apply_),A::LinOpGrad, v)
 	LinOpGrad_pullback(Δy) = (NoTangent(),NoTangent(), apply_adjoint_(A, Δy))
