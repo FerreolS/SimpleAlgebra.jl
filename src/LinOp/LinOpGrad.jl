@@ -29,7 +29,7 @@ apply_adjoint_(A::LinOpGrad, x) =  compute_gradient_adjoint(A.gradfuncadj,x)
 function compute_gradient(f,x::AbstractArray{T,N}) where {T,N}
     sz = size(x)
 	Y = similar(x,sz...,N)
-	f(Y,x)
+	@invokelatest f(Y,x)
 	return Y
 end
 
@@ -37,7 +37,7 @@ end
 function compute_gradient_adjoint(f,x::AbstractArray{T,N}) where {T,N}
 	sz = size(x)
 	Y = similar(x,sz[1:end-1])
-	f(Y,x)
+	@invokelatest f(Y,x)
 	return Y
 end
 
