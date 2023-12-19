@@ -1,18 +1,12 @@
 
 
-struct LinOpGrad{I,O,F,FA} <:  AbstractLinOp{I,O}
+struct LinOpGrad{I,O} <:  AbstractLinOp{I,O}
     inputspace::I
 	outputspace::O
-	gradfunc::F
-	gradfuncadj::FA
 	function LinOpGrad(inputspace::I) where {I<:AbstractDomain}
 		N = ndims(inputspace)
 		outputspace = CoordinateSpace(eltype(inputspace), (size(inputspace)...,N))
-		F =  @eval (Y,X) -> $(compute_gradientKA!(N))
-		FA = @eval (Y,X) -> $(compute_gradient_adjointKA!(N))
-#		F =  compute_gradient!
-#		FA = compute_gradient_adjoint!
-    	return new{I,typeof(outputspace),typeof(F),typeof(FA)}(inputspace,outputspace,F,FA)
+    	return new{I,typeof(outputspace),}(inputspace,outputspace)
 	end
 end 
 
@@ -22,24 +16,87 @@ LinOpGrad(::Type{TI}, sz::Int) where TI 	= LinOpGrad(TI,Tuple(sz))
 LinOpGrad(::Type{TI}, sz::NTuple) where TI 	= LinOpGrad(CoordinateSpace(TI,sz))
 LinOpGrad(::Type{TI}, inputspace::CoordinateSpace) where TI = LinOpGrad(CoordinateSpace(TI,inputspace))
 
-apply_(A::LinOpGrad, x)  = compute_gradient(A.gradfunc,x)
+apply_(::LinOpGrad, x)  = compute_grad(x)
 
-apply_adjoint_(A::LinOpGrad, x) =  compute_gradient_adjoint(A.gradfuncadj,x)
+apply_adjoint_(::LinOpGrad, x) =  compute_grad_adjoint(x)
 
-function compute_gradient(f,x::AbstractArray{T,N}) where {T,N}
+function compute_grad(x::AbstractArray{T,N}) where {T,N}
     sz = size(x)
 	Y = similar(x,sz...,N)
-@invokelatest	f(Y,x)
+	compute_grad!(Y,x)
 	return Y
 end
 
 
-function compute_gradient_adjoint(f,x::AbstractArray{T,N}) where {T,N}
+function compute_grad_adjoint(x::AbstractArray{T,N}) where {T,N}
 	sz = size(x)
 	Y = similar(x,sz[1:end-1])
-@invokelatest	f(Y,x)
+	compute_grad_adjoint!(Y,x)
 	return Y
 end
+
+
+
+
+
+@generated function compute_grad!(Y::AbstractArray{T,M},X::AbstractArray{T,N}) where {M,N,T}
+	M != N+1 && throw(SimpleAlgebraFailure("LinOpGrad output must have one more dimensions than the input"))
+	code =Expr(:block)
+	push!(code.args,:(fill!(Y,zero(T))))
+	for d = 1:N
+		indices = generate_indices(N, d, 1)
+		Id = CartesianIndex(indices...)
+		push!(code.args, :( difN(get_backend(X))(Y,X,$Id,$d,ndrange = size(X) .- tuple($indices...))))
+	end
+	push!(code.args,:(synchronize(get_backend(X))))
+	push!(code.args,:(return Y))
+	return code 
+end
+
+@generated function compute_grad_adjoint!(Y::AbstractArray{T,N},X::AbstractArray{T,M}) where {M,N,T}
+	N != M-1 && throw(SimpleAlgebraFailure("LinOpGrad output must have one more dimensions than the input"))
+	code =Expr(:block)
+	push!(code.args,:(fill!(Y,zero(T))))
+	for d = 1:N
+		indices = generate_indices(N, d, 1)
+		Id = CartesianIndex(indices...)
+		push!(code.args, :( difN_adjoint(get_backend(X))(Y,X,$Id,$d,ndrange = size(Y) .- tuple($indices...))))
+	end 
+	push!(code.args,:(synchronize(get_backend(X))))
+	push!(code.args,:(return Y))
+   return code
+
+end
+
+function generate_indices(num_dims, d, offset)
+	indices = zeros(Int,num_dims)
+	indices[d] = offset
+	return indices
+end
+
+
+
+@kernel function difN_adjoint(Y, X,idx,d) 
+	I = @index(Global, Cartesian)
+	Y[I] += X[I,d]
+	Y[I + idx] -= X[I,d]
+end
+
+
+@kernel function difN(Y, X,idx,d) 
+	I = @index(Global, Cartesian)
+	Y[I,d] = X[I] - X[I + idx]
+end
+
+
+function ChainRulesCore.rrule( ::typeof(apply_),A::LinOpGrad, v)
+	LinOpGrad_pullback(Δy) = (NoTangent(),NoTangent(), apply_adjoint_(A, Δy))
+    return  apply_(A,v), LinOpGrad_pullback
+end
+
+
+
+
 
 
 @generated function compute_gradient!(Y::AbstractArray{T,M},X::AbstractArray{T,N}) where {M,N,T}
@@ -161,6 +218,9 @@ end
 
 
 
+#= 
+
+
 
 function compute_gradientKA!(N) 
 	code =Expr(:block)
@@ -172,13 +232,6 @@ function compute_gradientKA!(N)
 	push!(code.args,:(return Y))
 	return code 
 end
-
-function generate_indices(num_dims, d, offset)
-	indices = zeros(Int,num_dims)
-	indices[d] = offset
-	return indices
-end
-
 
 function  difX(N, d, offset) 
 	code =Expr(:block)
@@ -224,18 +277,6 @@ function compute_gradient_adjointKA!(N)
 	return code 
 end
 
-function ChainRulesCore.rrule( ::typeof(apply_),A::LinOpGrad, v)
-	LinOpGrad_pullback(Δy) = (NoTangent(),NoTangent(), apply_adjoint_(A, Δy))
-    return  apply_(A,v), LinOpGrad_pullback
-end
-
-
-
-
-
-
-
-#= 
 
 
 """
