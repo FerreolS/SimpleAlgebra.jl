@@ -29,7 +29,7 @@ apply_adjoint_(A::LinOpGrad, x) =  compute_gradient_adjoint(A.gradfuncadj,x)
 function compute_gradient(f,x::AbstractArray{T,N}) where {T,N}
     sz = size(x)
 	Y = similar(x,sz...,N)
-	@invokelatest f(Y,x)
+	f(Y,x)
 	return Y
 end
 
@@ -37,7 +37,7 @@ end
 function compute_gradient_adjoint(f,x::AbstractArray{T,N}) where {T,N}
 	sz = size(x)
 	Y = similar(x,sz[1:end-1])
-	@invokelatest f(Y,x)
+	f(Y,x)
 	return Y
 end
 
@@ -166,7 +166,7 @@ function compute_gradientKA!(N)
 	code =Expr(:block)
 	push!(code.args,:(fill!(Y,zero(eltype(Y)))))
 	for d = 1:N
-		push!(code.args, (SimpleAlgebra.difX(N,d,1)))
+		push!(code.args, (difX(N,d,1)))
 	end
 	push!(code.args,:(synchronize(get_backend(X))))
 	push!(code.args,:(return Y))
@@ -217,7 +217,7 @@ function compute_gradient_adjointKA!(N)
 	code =Expr(:block)
 	push!(code.args,:(fill!(Y,zero(eltype(Y)))))
 	for d = 1:N
-		push!(code.args, (SimpleAlgebra.difX_adjoint(N,d,1)))
+		push!(code.args, (difX_adjoint(N,d,1)))
 	end
 	push!(code.args,:(synchronize(get_backend(X))))
 	push!(code.args,:(return Y))
