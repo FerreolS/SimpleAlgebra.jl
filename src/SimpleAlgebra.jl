@@ -6,7 +6,6 @@ using Functors
 using Adapt
 using InverseFunctions
 import InverseFunctions:inverse
-using  LoopVectorization
 using  KernelAbstractions
 
 

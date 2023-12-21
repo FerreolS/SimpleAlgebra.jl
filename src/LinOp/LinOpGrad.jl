@@ -1,4 +1,37 @@
+"""
+```julia
 
+julia> X = CUDA.randn(1000,1000,50);
+
+julia> G = LinOpGrad(size(X));
+
+julia> @benchmark CUDA.@sync G'*G*X
+BenchmarkTools.Trial: 946 samples with 1 evaluation.
+ Range (min … max):  4.857 ms … 62.775 ms  ┊ GC (min … max): 0.00% … 4.14%
+ Time  (median):     4.986 ms              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   5.258 ms ±  2.151 ms  ┊ GC (mean ± σ):  1.51% ± 4.11%
+
+  ██▅                                                         
+  ████▆▇▆▆▁▄▄▄▁▄▁▁▁▁▁▁▁▁▁▁▁▁▁▄▁▁▁▁▄▁▁▁▁▁▄▁▁▅▁▁▄▄▄▅▅▄▄▆▁▁▅▄▄▄ ▇
+  4.86 ms      Histogram: log(frequency) by time     10.9 ms <
+
+ Memory estimate: 26.22 KiB, allocs estimate: 506.
+
+x = randn(Float32,1000,1000,50);
+
+julia> @benchmark G'*G*x
+        BenchmarkTools.Trial: 6 samples with 1 evaluation.
+ Range (min … max):  871.211 ms … 951.214 ms  ┊ GC (min … max): 0.12% … 5.56%
+ Time  (median):     939.039 ms               ┊ GC (median):    5.52%
+ Time  (mean ± σ):   928.122 ms ±  29.877 ms  ┊ GC (mean ± σ):  4.55% ± 2.19%
+
+  █                                    █            █  █    █ █  
+  █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁█▁▁▁▁▁▁▁▁▁▁▁▁█▁▁█▁▁▁▁█▁█ ▁
+  871 ms           Histogram: frequency by time          951 ms <
+
+ Memory estimate: 763.02 MiB, allocs estimate: 1133.
+```
+"""
 
 struct LinOpGrad{I,O} <:  AbstractLinOp{I,O}
     inputspace::I
@@ -97,6 +130,8 @@ end
 
 
 
+
+#= 
 
 
 @generated function compute_gradient!(Y::AbstractArray{T,M},X::AbstractArray{T,N}) where {M,N,T}
@@ -217,8 +252,6 @@ end
 
 
 
-
-#= 
 
 
 
