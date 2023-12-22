@@ -68,16 +68,20 @@ function compute_grad_adjoint(x::AbstractArray{T,N}) where {T,N}
 	return Y
 end
 
+# FIXME  should use some Traits mechanism to swith to Int64 for array larger than 2^32-1. (INt32 indexing is more adapted to  GPU)
+
+compute_grad!(Y,X) = compute_grad!(Int32,Y,X)
+
+compute_grad_adjoint!(Y,X) = compute_grad_adjoint!(Int32,Y,X)
 
 
 
-
-@generated function compute_grad!(Y::AbstractArray{T,M},X::AbstractArray{T,N}) where {M,N,T}
+@generated function compute_grad!(::Type{T2},Y::AbstractArray{T,M},X::AbstractArray{T,N}) where {M,N,T,T2}
 	M != N+1 && throw(SimpleAlgebraFailure("LinOpGrad output must have one more dimensions than the input"))
 	code =Expr(:block)
 	push!(code.args,:(fill!(Y,zero(T))))
-	for d = 1:N
-		indices = generate_indices(N, d, 1)
+	for d::T2 = 1:N
+		indices = generate_indices(T2,N, d, 1)
 		Id = CartesianIndex(indices...)
 		push!(code.args, :( difN(get_backend(X))(Y,X,$Id,$d,ndrange = size(X) .- tuple($indices...))))
 	end
@@ -86,12 +90,12 @@ end
 	return code 
 end
 
-@generated function compute_grad_adjoint!(Y::AbstractArray{T,N},X::AbstractArray{T,M}) where {M,N,T}
+@generated function compute_grad_adjoint!(::Type{T2},Y::AbstractArray{T,N},X::AbstractArray{T,M}) where {M,N,T,T2}
 	N != M-1 && throw(SimpleAlgebraFailure("LinOpGrad output must have one more dimensions than the input"))
 	code =Expr(:block)
 	push!(code.args,:(fill!(Y,zero(T))))
-	for d = 1:N
-		indices = generate_indices(N, d, 1)
+	for d::T2 = 1:N
+		indices = generate_indices(T2,N, d, 1)
 		Id = CartesianIndex(indices...)
 		push!(code.args, :( difN_adjoint(get_backend(X))(Y,X,$Id,$d,ndrange = size(Y) .- tuple($indices...))))
 	end 
@@ -101,11 +105,12 @@ end
 
 end
 
-function generate_indices(num_dims, d, offset)
-	indices = zeros(Int,num_dims)
-	indices[d] = offset
+function generate_indices(::Type{T2},num_dims, d, offset) where{T2}
+	indices = zeros(T2,num_dims)
+	indices[d] = T2(offset)
 	return indices
 end
+generate_indices(num_dims, d, offset) = generate_indices(Int,num_dims, d, offset)
 
 
 
