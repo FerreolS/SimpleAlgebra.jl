@@ -68,7 +68,7 @@ function compute_grad_adjoint(x::AbstractArray{T,N}) where {T,N}
 	return Y
 end
 
-# FIXME  should use some Traits mechanism to swith to Int64 for array larger than 2^32-1. (INt32 indexing is more adapted to  GPU)
+# FIXME  should use some Traits mechanism to swith to Int64 for array larger than 2^32-1. (Int32 indexing should be more adapted to  GPU however, I'm not sure it is really needed)
 
 compute_grad!(Y,X) = compute_grad!(Int32,Y,X)
 

@@ -45,7 +45,7 @@ end
 
 function LinOpScale(inputspace::CoordinateSpace{TI,N}, scale::T1) where {TI,T1,N}  
 	if T1==TI
-		scale==oneunit(scale) && return LinOpIdentity(sz)
+		scale==oneunit(scale) && return LinOpIdentity(inputspace)
 	end
 	TO = isconcretetype(TI) ? typeof(oneunit(TI) * oneunit(T1)) : TI
 	outputspace = CoordinateSpace(TO,size(inputspace))

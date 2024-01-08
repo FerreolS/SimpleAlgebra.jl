@@ -1,4 +1,9 @@
 
+function Adapt.adapt_storage(::Type{CUDA.CuArray}, x::LinOpDFT) 
+    Adapt.adapt_storage(CUDA.CuArray{eltype(inputspace(x))}, x)
+end
+
+
 function Adapt.adapt_storage(::Type{CUDA.CuArray{T}}, x::LinOpDFT) where  {T}
     dims = inputsize(x)
 	#Tx = eltype(I)
