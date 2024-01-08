@@ -134,8 +134,11 @@ function ChainRulesCore.rrule( ::typeof(apply_adjoint_),A::LinOpDFT, v)
     return  apply_adjoint_(A,v), LinOpDFT_pullback
 end
 
+function Adapt.adapt_storage(::Type{A}, x::LinOpDFT) where A<:AbstractArray
+    Adapt.adapt_storage(A{eltype(inputspace(x))}, x)
+end
 
-function Adapt.adapt_storage(::Type{AbstractArray{T}}, x::LinOpDFT) where {T<:fftwNumber}
+function Adapt.adapt_storage(::Type{A}, x::LinOpDFT) where {T<:fftwNumber,A<:AbstractArray{T}}
     dims = inputsize(x)
     planning = planning = check_flags(FFTW.MEASURE)
     timelimit = FFTW.NO_TIMELIMIT
@@ -153,9 +156,9 @@ function Adapt.adapt_storage(::Type{AbstractArray{T}}, x::LinOpDFT) where {T<:ff
                           timelimit = timelimit)
     else
         temp = Array{T}(undef, dims)
-        forward = plan_fft!(temp; flags = (planning | FFTW.DESTROY_INPUT),
+        forward = plan_fft(temp; flags = (planning | FFTW.DESTROY_INPUT),
                         timelimit = timelimit)
-        backward = plan_bfft!(temp; flags = (planning | FFTW.DESTROY_INPUT),
+        backward = plan_bfft(temp; flags = (planning | FFTW.DESTROY_INPUT),
                           timelimit = timelimit)
     end
 
