@@ -1,3 +1,7 @@
+module SimpleAlgebraCUDAExt
+using Adapt, CUDA, FFTW, SimpleAlgebra
+#include(dirname(pathof(Tullio))*"/../ext/TullioCUDAExt.jl")   
+#include("../src/LinOp/LinOpGrad.jl")
 
 function Adapt.adapt_storage(::Type{CUDA.CuArray}, x::LinOpDFT) 
     Adapt.adapt_storage(CUDA.CuArray{eltype(inputspace(x))}, x)
@@ -24,5 +28,7 @@ function Adapt.adapt_storage(::Type{CUDA.CuArray{T}}, x::LinOpDFT) where  {T}
 	inputspace = CoordinateSpace(T,forward.sz)
 	outputspace = CoordinateSpace(T,forward.osz)
     return LinOpDFT(inputspace, outputspace, forward, backward)
+
+end
 
 end

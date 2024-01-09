@@ -1,1 +1,0 @@
-println("KernelAbtraction required for Tullio in GPU")
