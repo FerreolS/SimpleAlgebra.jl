@@ -58,6 +58,7 @@ function apply_jacobian_ end
 
 Adapt.adapt_storage(to, x::AbstractMap) = fmap(adapt(to), x)
 
+Adapt.adapt_storage(::Type{T}, x::AbstractMap)  where T<:Number = adapt(AbstractArray{T}, x)
 
 #= function compose(::AbstractMap, ::AbstractMap) 
 	throw(SimpleAlgebraFailure("Input of first element does not match the output of the second element"))

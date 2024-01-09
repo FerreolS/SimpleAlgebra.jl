@@ -38,7 +38,7 @@ include("Domain.jl")
 include("Map/Map.jl")
 include("LinOp/LinOp.jl")
 include("Cost/Cost.jl")
-include("Utils/functor.jl")
+#include("Utils/functor.jl")
 #include("Utils/traits.jl")
 
 using PackageExtensionCompat
