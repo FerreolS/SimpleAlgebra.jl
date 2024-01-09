@@ -1,7 +1,5 @@
 module SimpleAlgebraCUDAExt
 using Adapt, CUDA, FFTW, SimpleAlgebra
-#include(dirname(pathof(Tullio))*"/../ext/TullioCUDAExt.jl")   
-#include("../src/LinOp/LinOpGrad.jl")
 
 function Adapt.adapt_storage(::Type{CUDA.CuArray}, x::LinOpDFT) 
     Adapt.adapt_storage(CUDA.CuArray{eltype(inputspace(x))}, x)
@@ -12,7 +10,7 @@ function Adapt.adapt_storage(::Type{CUDA.CuArray{T}}, x::LinOpDFT) where  {T}
     dims = inputsize(x)
 	#Tx = eltype(I)
     
-    if T<: fftwReal 
+    if T<: FFTW.fftwReal 
         forward = plan_rfft(CUDA.CuArray{T}(undef, dims))
 
         backward = plan_brfft(CUDA.CuArray{Complex{T}}(undef, forward.osz), dims[1];)
