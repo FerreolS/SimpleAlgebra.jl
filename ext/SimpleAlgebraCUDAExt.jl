@@ -16,8 +16,8 @@ function Adapt.adapt_storage(::Type{CUDA.CuArray{T}}, x::LinOpDFT) where  {T}
         backward = plan_brfft(CUDA.CuArray{Complex{T}}(undef, forward.osz), dims[1];)
     else
         temp = CUDA.CuArray{T}(undef, dims)
-        forward = plan_fft!(temp)
-        backward = plan_bfft!(temp)
+        forward = plan_fft(temp)
+        backward = plan_bfft(temp)
     end
 
 
