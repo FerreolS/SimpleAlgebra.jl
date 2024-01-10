@@ -2,7 +2,7 @@
 abstract type AbstractLinOp{I,O}  <: AbstractMap{I,O}  end
 
 function apply_adjoint(A::AbstractLinOp{I,O},x) where {I,O}
-#	@assert x ∈ outputspace(A) "The size of input parameter must be $(outputsize(A))"
+	x ∈ outputspace(A) || throw(SimpleAlgebraFailure("The size of input parameter must be $(outputsize(A))")) 
 	if applicable(apply_adjoint_,A,x) 
 		return apply_adjoint_(A,x) 
 	else

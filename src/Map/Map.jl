@@ -41,14 +41,14 @@ end
 
 
 function apply(A::AbstractMap{I,O}, v) where {I,O}
-	#@assert v ∈ inputspace(A) "The input size must belong to the space $(inputspace(A))"
+	v ∈ inputspace(A) || throw(SimpleAlgebraFailure("The input size must belong to the space $(inputspace(A))")) 
 	apply_(A, v)
 end
 function apply_ end
 
 function apply_jacobian(A::AbstractMap{I,O}, v,x) where {I,O}
-	#@assert v ∈ I "The size of the second parameter must be  $(size(I))"
-	#@assert x ∈ O "The size of the third parameter must be $(size(O))"
+	 v ∈ I  || throw(SimpleAlgebraFailure("The size of the second parameter must be  $(size(I))"))
+	 x ∈ O  || throw(SimpleAlgebraFailure("The size of the third parameter must be $(size(O))"))
 	if applicable(apply_jacobian_,A,v,x)
 		return apply_jacobian_(A,v,x)
 	else

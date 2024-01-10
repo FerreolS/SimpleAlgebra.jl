@@ -134,7 +134,7 @@ LinOpDiag(::Type{T}, sz::NTuple{N,Int},diag::T1) where {T<:Number,T1<:Number, N}
 LinOpDiag(sz::NTuple,diag::T) where {T<:Number} = LinOpScale(sz,diag)
 
 function LinOpDiag(sz::NTuple{N,Int},diag::D) where {T<:Number,D<:AbstractArray{T},N}  
-	@assert sz==size(diag) "the diagonal should be of size $sz"
+	sz==size(diag)  || throw(SimpleAlgebraFailure("the diagonal should be of size $sz"))
 	return LinOpDiag(diag)
 end
 
