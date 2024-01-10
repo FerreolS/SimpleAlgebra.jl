@@ -21,6 +21,7 @@ Scalar() = Scalar{Number}()
 
 Base.size(sp::S) where{S<:CoordinateSpace} = sp.size
 Base.size(sp::AbstractCoordinateSpace{N}, d) where {N} = d::Integer <= N ? size(sp)[d] : 1
+Base.sizeof(sp::S) where {T,N,S<:CoordinateSpace{T,N}} = length(sp) * sizeof(T)
 
 Base.length(sp::S) where{S<:CoordinateSpace} = prod(sp.size)
 Base.ndims(::CoordinateSpace{T,N}) where {T,N} = N
