@@ -170,7 +170,3 @@ Base.:\(A::LinOpDiag{I,O,D1}, B::LinOpDiag{I,O,D2})   where {I,O,D1,D2} = LinOpD
 Base.:/(A::LinOpDiag{I,O,D1}, B::LinOpDiag{I,O,D2})   where {I,O,D1,D2} = LinOpDiag(inputspace(A),outputspace(A),@. A.diag / B.diag)
 
 inverse(A::LinOpDiag{I,O,D}) where {T,I,O,D<:AbstractArray{T}} = LinOpDiag(outputspace(A),inputspace(A), one(T)./(A.diag) )
-
-
-#Adapt.adapt_storage(::Type{AbstractArray{T}}, x::LinOpScale{I,O,D}) where {I,O,T,D<:AbstractArray{T}} = x 
-#Adapt.adapt_storage(::Type{AbstractArray{T}}, x::LinOpScale{I,O,D}) where {I,O,T,Tx,D<:AbstractArray{Tx}} =  LinOpScale(inputspace(x),T(x.scale))

@@ -17,10 +17,11 @@ Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 [weakdeps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
-Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [extensions]
 SimpleAlgebraCUDAExt = ["CUDA"]
 SimpleAlgebraUnitfulExt = ["Unitful"]
 SimpleAlgebraZygoteExt = ["Zygote"]
+SimpleAlgebraFluxExt = ["CUDA","Flux"]
