@@ -6,6 +6,9 @@ outputspace(A::AbstractMap)  = A.outputspace
 inputsize(A::AbstractMap)  = size(inputspace(A))
 outputsize(A::AbstractMap) = size(outputspace(A))
 
+inputtype(A::AbstractMap)  = eltype(inputspace(A))
+outputtype(A::AbstractMap) = eltype(outputspace(A))
+
 (A::AbstractMap)( v)   = A*v
 
 
