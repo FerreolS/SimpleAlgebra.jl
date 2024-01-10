@@ -13,7 +13,8 @@ export  AbstractMap,AbstractCost
 export  AbstractDomain,
         CoordinateSpace,AbstractCoordinateSpace,
         inputspace, outputspace,
-        inputsize, outputsize
+        inputsize, outputsize,
+        inputtype, outputtype
 export  MapReduceSum
 export  AbstractLinOp, 
         LinOpConv, 
