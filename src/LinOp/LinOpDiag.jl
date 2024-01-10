@@ -41,7 +41,7 @@ struct LinOpScale{I<:CoordinateSpace,O<:CoordinateSpace,T} <:  AbstractLinOp{I,O
 	LinOpScale(inputspace::I,outputspace::O, scale::T) where {I<:CoordinateSpace,O<:CoordinateSpace,T<:Number} =  new{I,O,T}(inputspace,outputspace,scale)
 end
 
-#@functor LinOpScale
+@functor LinOpScale
 
 function LinOpScale(inputspace::CoordinateSpace{TI,N}, scale::T1) where {TI,T1,N}  
 	if T1==TI
@@ -96,8 +96,8 @@ add(A::LinOpScale , B::LinOpScale)  = LinOpScale(inputspace(A),outputspace(A), A
 
 inverse(A::LinOpScale) = LinOpScale(outputspace(A),inputspace(A), 1/A.scale )
 
-Adapt.adapt_storage(::Type{A}, x::LinOpScale{I,O,T}) where {I,O,T,A<:AbstractArray{T}} = x 
-Adapt.adapt_storage(::Type{A}, x::LinOpScale{I,O,Tx}) where {I,O,T,Tx,A<:AbstractArray{T}} =  LinOpScale(inputspace(x),T(x.scale))
+Adapt.adapt_storage(::Type{A}, x::LinOpScale) where {A<:AbstractArray} = x 
+Adapt.adapt_storage(::Type{T}, x::LinOpScale)  where {T<:Number} = LinOpScale(inputspace(x),T(x.scale))
 
 ### DIAGONAL (element-wise multiplication) 
 
