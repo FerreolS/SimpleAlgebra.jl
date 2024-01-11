@@ -40,6 +40,7 @@ struct SumLinOp{I,O,D1<:AbstractLinOp{I,O},D2<:AbstractLinOp{I,O}} <:  AbstractL
 		    return new{O,I,D1,D2}(A,B)
 	end
 end
+add( A::AbstractLinOp,scalar::Number) = add(scalar,A)
 
 @functor SumLinOp
 

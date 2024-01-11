@@ -16,7 +16,8 @@ Base.:+(A::AbstractMap, B::AbstractMap)  = add(A,B)
 Base.:+(A::AbstractMap, B::T) where {T<:Union{Number,AbstractArray}}= add(A,B)
 Base.:+(B::T,A::AbstractMap) where {T<:Union{Number,AbstractArray}} = add(A,B)
 Base.:-(A::AbstractMap, B::T) where {T<:Union{Number,AbstractArray}}= add(A,-B)
-
+Base.:-(A::T,B::AbstractMap) where {T<:Union{Number,AbstractArray}}= add(A,-B)
+Base.:-(A::AbstractMap) = -1*A
 
 Base.:*(A::AbstractMap, v)  = apply(A, v ) 
 

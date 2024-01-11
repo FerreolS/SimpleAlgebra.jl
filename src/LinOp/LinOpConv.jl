@@ -95,4 +95,11 @@ function add(A::(LinOpConv{IA,D,F} where {D,F}), B::(LinOpScale{IB,OB,T} where {
 	return LinOpConv(inpsp, A.M + T(B.scale) ,A.F)
 end
 
+
+function add(scalar::Number, A::LinOpConv) 
+	iszero(scalar) && return A
+    add(LinOpScale(inputspace(A),outputspace(A), outputtype(A)(scalar)),A)
+end
+
+
 inverse(A::LinOpConv) = LinOpConv(inputspace(A), inv(A.M),A.F) 

@@ -173,6 +173,13 @@ add(A::LinOpIdentity,B::LinOpDiag)  = add(B,A)
 add(A::LinOpDiag{I,O,D1}, B::AbstractArray{T,N})   where {T,N,I,O,D1<:AbstractArray{T,N}} = LinOpDiag(inputspace(A),outputspace(A),@. A.diag + B)
 add(B::AbstractArray,A::LinOpDiag) = add(A,B)
 
+
+function add(scalar::Number, A::M) where {M<:Union{LinOpIdentity,LinOpScale,LinOpDiag}}
+	iszero(scalar) && return A
+    add(LinOpScale(inputspace(A),outputspace(A), outputtype(A)(scalar)),A)
+end
+
+
 Base.:\(A::LinOpDiag{I,O,D1}, B::LinOpDiag{I,O,D2})   where {I,O,D1,D2} = LinOpDiag(inputspace(A),outputspace(A),@. A.diag \ B.diag)
 Base.:/(A::LinOpDiag{I,O,D1}, B::LinOpDiag{I,O,D2})   where {I,O,D1,D2} = LinOpDiag(inputspace(A),outputspace(A),@. A.diag / B.diag)
 
