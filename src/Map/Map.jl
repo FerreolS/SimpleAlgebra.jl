@@ -15,6 +15,7 @@ outputtype(A::AbstractMap) = eltype(outputspace(A))
 Base.:+(A::AbstractMap, B::AbstractMap)  = add(A,B)
 Base.:+(A::AbstractMap, B::T) where {T<:Union{Number,AbstractArray}}= add(A,B)
 Base.:+(B::T,A::AbstractMap) where {T<:Union{Number,AbstractArray}} = add(A,B)
+Base.:-(A::AbstractMap, B::T) where {T<:Union{Number,AbstractArray}}= add(A,-B)
 
 
 Base.:*(A::AbstractMap, v)  = apply(A, v ) 
@@ -38,7 +39,12 @@ function Base.:\(B::AbstractMap,A::T) where T
     inv(B) * A
 end
 
-
+function Base.:/(A::AbstractMap,B::Number) 
+    A * inv(B)
+end
+function Base.:\(A::Number,B::AbstractMap) 
+    inv(A) * B
+end
 
 function apply(A::AbstractMap{I,O}, v) where {I,O}
 	v ∈ inputspace(A) || throw(SimpleAlgebraFailure("The input size must belong to the space $(inputspace(A))")) 

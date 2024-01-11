@@ -13,9 +13,10 @@ LinOpIdentity(sz::NTuple) = LinOpIdentity(CoordinateSpace(sz))
 LinOpIdentity(sz::Int) = LinOpIdentity(Tuple(sz))
 LinOpIdentity(inputspace::I) where {I<:AbstractDomain} = LinOpIdentity{I}(inputspace) 
 
-apply_(::LinOpIdentity{I}, x) where {I} = x
+apply_(::LinOpIdentity, x)  = x
+apply_!(A::LinOpIdentity, y, x) = apply_(A,x)
 
-apply_adjoint_(::LinOpIdentity{I}, x) where {I} =  x
+apply_adjoint_(::LinOpIdentity, x)  =  x
 AdjointLinOp(A::LinOpIdentity) = A	
 
 # FIXME should we be restrictive about the size?
@@ -38,7 +39,10 @@ struct LinOpScale{I<:CoordinateSpace,O<:CoordinateSpace,T} <:  AbstractLinOp{I,O
 	inputspace::I
 	outputspace::O
 	scale::T
-	LinOpScale(inputspace::I,outputspace::O, scale::T) where {I<:CoordinateSpace,O<:CoordinateSpace,T<:Number} =  new{I,O,T}(inputspace,outputspace,scale)
+	function LinOpScale(inputspace::I,outputspace::O, scale::T) where {I<:CoordinateSpace,O<:CoordinateSpace,T<:Number}
+		scale==oneunit(scale) && return LinOpIdentity(inputspace)
+		new{I,O,T}(inputspace,outputspace,scale)
+	end
 end
 
 @functor LinOpScale
@@ -59,7 +63,6 @@ end
 LinOpScale(::Type{T},sz::Int, scale) where {T} = LinOpScale(T,Tuple(sz),scale)
 
 function LinOpScale(sz::NTuple{N,Int}, scale::T) where {T<:Number,N}
-	scale==oneunit(scale) && return LinOpIdentity(sz)
 	inputspace = CoordinateSpace(Number,sz)
     LinOpScale(inputspace, scale)
 end
@@ -80,10 +83,11 @@ function compose(left::LinOpScale{I,O,Tl},right::LinOpScale{O,P,Tr}) where {I,O,
     LinOpScale(insp, outsp,left.scale .* right.scale)
 end
 
-Base.:*(scalar::T, A::AbstractMap{I,O}) where {I, O,T<:Number} = compose(LinOpScale( outputsize(A), scalar), A)
-
-compose(A::AbstractLinOp{I,O}, B::LinOpScale{I,T}) where {I,O,T} = compose(LinOpScale( outputsize(A), B.scale),A)
-compose(A::LinOpScale{I,T}, B::LinOpScale{I,T1}) where {I,T<:Number,T1<:Number}  = LinOpScale( inputsize(A), A.scale * B.scale)
+function Base.:*(scalar::Number, A::AbstractMap)
+	isone(scalar) && return A
+    compose(LinOpScale( outputspace(A), scalar), A)
+end
+Base.:*( A::AbstractMap,scalar::Number) = scalar*A
 
 compose(::LinOpIdentity,B::LinOpScale)  = B
 compose(B::LinOpScale,::LinOpIdentity)  = B
@@ -93,8 +97,13 @@ function add(A::LinOpScale{I,O,T} , ::LinOpIdentity) where {I,O,T}
 end
 add( B::LinOpIdentity,A::LinOpScale)  = add(A,B)
 add(A::LinOpScale , B::LinOpScale)  = LinOpScale(inputspace(A),outputspace(A), A.scale + B.scale )
+function add(scalar::Number, A::M) where {M<:Union{LinOpIdentity,LinOpScale,LinOpDiag,LinOpConv}}
+	iszero(scalar) && return A
+    add(LinOpScale(inputspace(A),outputspace(A), outputtype(A)(scalar)),A)
+end
+add( A::M,scalar::Number) where {M<:Union{LinOpIdentity,LinOpScale,LinOpDiag,LinOpConv}} = add(scalar,A)
 
-inverse(A::LinOpScale) = LinOpScale(outputspace(A),inputspace(A), 1/A.scale )
+inverse(A::LinOpScale) = LinOpScale(outputspace(A),inputspace(A), inv(A.scale) )
 
 Adapt.adapt_storage(::Type{A}, x::LinOpScale) where {A<:AbstractArray} = x 
 Adapt.adapt_storage(::Type{T}, x::LinOpScale)  where {T<:Number} = LinOpScale(inputspace(x),T(x.scale))
@@ -161,8 +170,6 @@ add(A::LinOpScale, B::LinOpDiag)  = add(B,A)
 add(A::LinOpDiag{I,O,D1}, ::LinOpIdentity{I})   where {N,T,I,O,D1<:AbstractArray{T,N}} = LinOpDiag(inputspace(A),outputspace(A),A.diag .+ oneunit(T))
 add(A::LinOpIdentity,B::LinOpDiag)  = add(B,A)
 
-add(A::LinOpDiag, B::Number) = LinOpDiag(inputspace(A),outputspace(A),A.diag .+ B)
-add(B::Number,A::LinOpDiag) = add(A,B)
 add(A::LinOpDiag{I,O,D1}, B::AbstractArray{T,N})   where {T,N,I,O,D1<:AbstractArray{T,N}} = LinOpDiag(inputspace(A),outputspace(A),@. A.diag + B)
 add(B::AbstractArray,A::LinOpDiag) = add(A,B)
 

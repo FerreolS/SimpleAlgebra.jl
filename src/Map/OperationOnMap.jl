@@ -97,6 +97,6 @@ outputspace(A::CompositionMap) = outputspace(A.left)
 
 
 apply_(A::CompositionMap, v) = apply(A.left,apply(A.right,v))
-apply_jacobian_(A::CompositionMap, v) = apply_jacobian_(A.right,apply_jacobian_(A.left,v))
+#apply_jacobian_(A::CompositionMap, v, x) = apply_jacobian_(A.right,apply_jacobian_(A.left,v,x),A.left*x)
 
 inverse(A::CompositionMap) = inverse(A.right) * inverse(A.left)
