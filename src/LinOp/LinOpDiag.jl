@@ -136,11 +136,7 @@ function add(A::LinOpScale{I,O,T} , ::LinOpIdentity) where {I,O,T}
 end
 add( B::LinOpIdentity,A::LinOpScale)  = add(A,B)
 add(A::LinOpScale , B::LinOpScale)  = LinOpScale(inputspace(A),outputspace(A), A.scale + B.scale )
-function add(scalar::Number, A::M) where {M<:Union{LinOpIdentity,LinOpScale,LinOpDiag,LinOpConv}}
-	iszero(scalar) && return A
-    add(LinOpScale(inputspace(A),outputspace(A), outputtype(A)(scalar)),A)
-end
-add( A::M,scalar::Number) where {M<:Union{LinOpIdentity,LinOpScale,LinOpDiag,LinOpConv}} = add(scalar,A)
+
 
 inverse(A::LinOpScale) = LinOpScale(outputspace(A),inputspace(A), inv(A.scale) )
 
