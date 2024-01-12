@@ -12,6 +12,10 @@ outputspace(A::LinOpIdentity) = A.inputspace
 LinOpIdentity(sz::NTuple) = LinOpIdentity(CoordinateSpace(sz))
 LinOpIdentity(sz::Int) = LinOpIdentity(Tuple(sz))
 LinOpIdentity(inputspace::I) where {I<:AbstractDomain} = LinOpIdentity{I}(inputspace) 
+function Base.one(A::AbstractMap{I,I}) where {I<:AbstractDomain}
+	isendomorphism(A)|| throw(SimpleAlgebraFailure("Input is not an endomorphism"))
+    LinOpIdentity{I}(inputspace(A))
+end 
 
 apply_(::LinOpIdentity, x)  = x
 apply_!(A::LinOpIdentity, y, x) = apply_(A,x)
@@ -46,6 +50,10 @@ outputspace(A::LinOpZero) = A.inputspace
 LinOpZero(sz::NTuple) = LinOpZero(CoordinateSpace(sz))
 LinOpZero(sz::Int) = LinOpZero(Tuple(sz))
 LinOpZero(inputspace::I) where {I<:AbstractDomain} = LinOpZero{I}(inputspace) 
+function Base.zero(A::AbstractMap{I,I}) where {I<:AbstractDomain}
+	isendomorphism(A)|| throw(SimpleAlgebraFailure("Input is not an endomorphism"))
+    LinOpZero{I}(inputspace(A))
+end 
 
 apply_(::LinOpZero, x)  = zeros(eltype(x),size(x))
 apply_!(A::LinOpZero, y, x) = apply_(A,x)

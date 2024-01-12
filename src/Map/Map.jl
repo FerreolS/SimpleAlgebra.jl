@@ -9,6 +9,8 @@ outputsize(A::AbstractMap) = size(outputspace(A))
 inputtype(A::AbstractMap)  = eltype(inputspace(A))
 outputtype(A::AbstractMap) = eltype(outputspace(A))
 
+isendomorphism(A::AbstractMap) = inputspace(A) === outputspace(A) 
+
 (A::AbstractMap)( v)   = A*v
 
 
