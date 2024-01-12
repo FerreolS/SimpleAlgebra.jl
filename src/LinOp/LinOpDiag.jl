@@ -22,9 +22,7 @@ AdjointLinOp(A::LinOpIdentity) = A
 # FIXME should we be restrictive about the size?
 compose(::LinOpIdentity,A::LinOpIdentity)  = A
 compose(A::AbstractMap, ::LinOpIdentity)  = A
-compose(A::AbstractLinOp, ::LinOpIdentity)  = A
 compose(::LinOpIdentity,A::AbstractMap) = A
-compose(::LinOpIdentity,A::AbstractLinOp) = A
 
 function add(A::LinOpIdentity, B::LinOpIdentity)  
 	sp =inputspace(A)
@@ -33,6 +31,37 @@ function add(A::LinOpIdentity, B::LinOpIdentity)
 end
 
 inverse(A::LinOpIdentity) = A
+
+
+### Zero Matrix
+struct LinOpZero{I} <:  AbstractLinOp{I,I} 
+	inputspace::I
+end
+
+@functor LinOpZero
+
+outputspace(A::LinOpZero) = A.inputspace
+
+
+LinOpZero(sz::NTuple) = LinOpZero(CoordinateSpace(sz))
+LinOpZero(sz::Int) = LinOpZero(Tuple(sz))
+LinOpZero(inputspace::I) where {I<:AbstractDomain} = LinOpZero{I}(inputspace) 
+
+apply_(::LinOpZero, x)  = zeros(eltype(x),size(x))
+apply_!(A::LinOpZero, y, x) = apply_(A,x)
+
+apply_adjoint_(::LinOpZero, x)  =  zeros(eltype(x),size(x))
+AdjointLinOp(A::LinOpZero) = A	
+
+# FIXME should we be restrictive about the size?
+compose(::AbstractMap, A::LinOpZero)  = A
+compose(::LinOpIdentity, A::LinOpZero)  = A
+compose(A::LinOpZero,::AbstractMap) = A
+compose(A::LinOpZero,::LinOpIdentity) = A
+
+add(::LinOpZero, A::AbstractMap)  = A
+add(A::AbstractMap,::LinOpZero)  = A
+
 ### SCALING 
 
 struct LinOpScale{I<:CoordinateSpace,O<:CoordinateSpace,T} <:  AbstractLinOp{I,O} 
@@ -41,6 +70,7 @@ struct LinOpScale{I<:CoordinateSpace,O<:CoordinateSpace,T} <:  AbstractLinOp{I,O
 	scale::T
 	function LinOpScale(inputspace::I,outputspace::O, scale::T) where {I<:CoordinateSpace,O<:CoordinateSpace,T<:Number}
 		scale==oneunit(scale) && return LinOpIdentity(inputspace)
+		scale==false && return LinOpZero(inputspace)
 		new{I,O,T}(inputspace,outputspace,scale)
 	end
 end
@@ -50,6 +80,7 @@ end
 function LinOpScale(inputspace::CoordinateSpace{TI,N}, scale::T1) where {TI,T1,N}  
 	if T1==TI
 		scale==oneunit(scale) && return LinOpIdentity(inputspace)
+		scale==false && return LinOpZero(inputspace)
 	end
 	TO = isconcretetype(TI) ? typeof(oneunit(TI) * oneunit(T1)) : TI
 	outputspace = CoordinateSpace(TO,size(inputspace))
