@@ -9,6 +9,13 @@ function apply_adjoint(A::AbstractLinOp{I,O},x) where {I,O}
 		return apply_jacobian(A,zeros(eltype(x),inputsize(A)),x)
 	end
 end
+
+function apply_adjoint!(S::Scratchspace,A::AbstractMap{I,O}, x) where {I,O}
+	x ∈ outputspace(A) || throw(SimpleAlgebraFailure("The input size must belong to the space $(inputspace(A))")) 
+	y = newarray!(S,inputspace(A))
+	apply_adjoint_!(y,A, x)
+end
+
 function apply_adjoint_ end
 
 apply_jacobian(A::AbstractLinOp{I,O}, _,x) where {I,O} = apply_adjoint(A,x) 

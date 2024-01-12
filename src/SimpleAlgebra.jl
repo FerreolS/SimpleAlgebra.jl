@@ -36,10 +36,10 @@ showerror(io::IO, err::SimpleAlgebraFailure) =
     print(io, err.msg)
 
 include("Domain.jl")
+include("Utils/Scratchspace.jl")
 include("Map/Map.jl")
 include("LinOp/LinOp.jl")
 include("Cost/Cost.jl")
-include("Utils/Scratchspace.jl")
 
 using PackageExtensionCompat
 function __init__()

@@ -56,6 +56,13 @@ function apply(A::AbstractMap{I,O}, v) where {I,O}
 end
 function apply_ end
 
+function apply!(S::Scratchspace,A::AbstractMap{I,O}, x) where {I,O}
+	x ∈ inputspace(A) || throw(SimpleAlgebraFailure("The input size must belong to the space $(inputspace(A))")) 
+	y = newarray!(S,outputspace(A))
+	apply_!(y,A, x)
+end
+
+
 function apply_jacobian(A::AbstractMap{I,O}, v,x) where {I,O}
 	 v ∈ I  || throw(SimpleAlgebraFailure("The size of the second parameter must be  $(size(I))"))
 	 x ∈ O  || throw(SimpleAlgebraFailure("The size of the third parameter must be $(size(O))"))

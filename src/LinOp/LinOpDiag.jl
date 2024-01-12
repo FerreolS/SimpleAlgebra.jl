@@ -183,9 +183,11 @@ function LinOpDiag(sz::NTuple{N,Int},diag::D) where {T<:Number,D<:AbstractArray{
 end
 
 apply_(A::LinOpDiag, v)  = @. v * A.diag
-
 apply_adjoint_(A::LinOpDiag, v)  = @. v * conj(A.diag)
 apply_inverse_(A::LinOpDiag, v)  = @. A.diag \ v 
+
+apply_!(y, A::LinOpDiag, x)  = @. y =  A.diag * x 
+apply_adjoint_!(y, A::LinOpDiag, x)  = @. y = x * conj(A.diag)
 
 AdjointLinOp(A::LinOpDiag{I,O,D}) where {T<:Real,I,O,D<:AbstractArray{T}} = A
 AdjointLinOp(A::LinOpDiag) =  LinOpDiag(outputspace(A),inputspace(A), conj.(A.diag))

@@ -93,6 +93,8 @@ apply_adjoint_(A::LinOpDFT, v)  = A.backward * v
 apply_inverse_(A::LinOpDFT, v) = oneunit(eltype(inputspace(A))) ./ length(inputspace(A)) .* (A.backward * v)
 inverse(A::LinOpDFT) = oneunit(eltype(inputspace(A))) / length(inputspace(A)) * AdjointLinOp(A)
 
+apply_!(y, A::LinOpDFT, x)  = FFTW.mul!(y, A.forward,x)
+apply_adjoint_!(y, A::LinOpDFT, x)  = FFTW.mul!(y,A.backward,x)
 
 function compose(left::D, right::C)  where {I,O,F,B,C<:LinOpDFT{I,O,F,B},D<:AdjointLinOp{O,I,C}} 
     if left.parent===right
