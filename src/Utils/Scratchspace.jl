@@ -10,7 +10,7 @@ function Scratchspace(::Type{M}) where {T, M<:AbstractArray{T}}
 	Scratchspace(scratch)
 end
 
-function newarray(csp::CoordinateSpace{T,N}, ssp::Scratchspace{A}) where {T,N,A<:AbstractVector{T}}
+function newarray!(ssp::Scratchspace{A},csp::CoordinateSpace{T,N}) where {T,N,A<:AbstractVector{T}}
     len = length(csp)
 	if length(ssp.scratch) < len
 		resize!(ssp.scratch,len)
@@ -18,7 +18,7 @@ function newarray(csp::CoordinateSpace{T,N}, ssp::Scratchspace{A}) where {T,N,A<
 	return reshape(view(ssp.scratch,1:len),size(csp))
 end
 
-function newarray(csp::CoordinateSpace{T,N}, ssp::Scratchspace{A}) where {T,T2,N,A<:AbstractVector{T2}}
+function newarray!(ssp::Scratchspace{A},csp::CoordinateSpace{T,N}) where {T,T2,N,A<:AbstractVector{T2}}
     bitlen = length(csp) * sizeof(eltype(csp))
 	len = div( bitlen , sizeof(T2), RoundUp)
 	if sizeof(ssp.scratch) < bitlen
