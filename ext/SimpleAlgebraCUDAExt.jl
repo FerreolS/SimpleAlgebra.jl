@@ -14,17 +14,17 @@ function Adapt.adapt_storage(::Type{CUDA.CuArray{T}}, x::LinOpDFT) where  {T}
         forward = plan_rfft(CUDA.CuArray{T}(undef, dims))
 
         backward = plan_brfft(CUDA.CuArray{Complex{T}}(undef, forward.osz), dims[1];)
+        outputspace = CoordinateSpace(Complex{T},forward.osz)
     else
         temp = CUDA.CuArray{T}(undef, dims)
         forward = plan_fft(temp)
         backward = plan_bfft(temp)
+        outputspace = CoordinateSpace(T,forward.osz)
     end
 
 
     # Build operator.
-
-	inputspace = CoordinateSpace(T,forward.sz)
-	outputspace = CoordinateSpace(T,forward.osz)
+    inputspace = CoordinateSpace(T,forward.sz)
     return LinOpDFT(inputspace, outputspace, forward, backward)
 
 end
