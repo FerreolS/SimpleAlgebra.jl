@@ -31,7 +31,7 @@ function  LinOpConv(::Val{:psf},psf::AbstractArray{T}; centered = true) where{T<
 	return LinOpConv(insp,M,F)
 end
 
-if false
+if true
 	function apply_(A::LinOpConv, x)
 		return length(inputspace(A)) .\ (A.F'*(A.M*(A.F*x)))
 		#return apply_adjoint_(A.F, apply_(A.M, apply_(A.F,x)))
@@ -43,7 +43,7 @@ else
 		wrk2 = Scratchspace(T)
 		tmp1 = apply!(wrk1,A.F,x)
 		tmp2 = apply!(wrk2,A.M,tmp1)
-		tmp1 = apply_adjoint!(wrk1,A.M,tmp2)
+		tmp1 = apply_adjoint!(wrk1,A.F,tmp2)
 		return length(inputspace(A)) .\ tmp1
 	end
 end
