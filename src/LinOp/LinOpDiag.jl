@@ -18,7 +18,7 @@ function Base.one(A::AbstractMap{I,I}) where {I<:AbstractDomain}
 end 
 
 apply_(::LinOpIdentity, x)  = x
-apply_!(A::LinOpIdentity, y, x) = apply_(A,x)
+apply_!(y,A::LinOpIdentity, x) = apply_(A,x)
 
 apply_adjoint_(::LinOpIdentity, x)  =  x
 AdjointLinOp(A::LinOpIdentity) = A	
