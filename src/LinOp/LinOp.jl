@@ -24,7 +24,8 @@ apply_jacobian(A::AbstractLinOp{I,O}, _,x) where {I,O} = apply_adjoint(A,x)
 
 
 # FIXME issue here should be generated only when apply_adjoint is implemented
-function ChainRulesCore.rrule(config::RuleConfig{>:HasForwardsMode}, ::typeof(apply),A::AbstractLinOp, v)
+#function ChainRulesCore.rrule(config::RuleConfig{>:HasForwardsMode}, ::typeof(apply),A::AbstractLinOp, v)
+function ChainRulesCore.rrule( ::typeof(apply),A::AbstractLinOp, v)
 	if applicable(apply_adjoint_,A,v)
     	∂Y(Δy) = (NoTangent(),NoTangent(), apply_adjoint_(A,Δy))
     	return apply(A,v), ∂Y
@@ -32,6 +33,16 @@ function ChainRulesCore.rrule(config::RuleConfig{>:HasForwardsMode}, ::typeof(ap
 		return ChainRulesCore.rrule_via_ad(config,apply_,A, v)
 	end
 end
+
+function ChainRulesCore.rrule( ::typeof(apply_adjoint),A::AbstractLinOp, v)
+	if applicable(apply_,A,v)
+		∂Y(Δy) = (NoTangent(),NoTangent(), apply_(A,Δy))
+		return apply_adjoint(A,v), ∂Y
+	else
+		return ChainRulesCore.rrule_via_ad(config,apply_adjoint_,A, v)
+	end
+end
+
 
 
 include("./OperationsOnLinOp.jl")

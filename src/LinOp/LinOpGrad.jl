@@ -126,12 +126,12 @@ end
 	Y[I,d] = X[I] - X[I + idx]
 end
 
-
+#= 
 function ChainRulesCore.rrule( ::typeof(apply_),A::LinOpGrad, v)
 	LinOpGrad_pullback(Δy) = (NoTangent(),NoTangent(), apply_adjoint_(A, Δy))
     return  apply_(A,v), LinOpGrad_pullback
 end
-
+ =#
 
 
 
