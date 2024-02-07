@@ -49,5 +49,11 @@ Base.ones(::Type{T},sp::CoordinateSpace{N}) where {T,N} = zeros(T,size(sp))
 
 Base.similar(A::AbstractArray, sp::CoordinateSpace{T,N}) where {T,N} = isconcretetype(T) ? similar(A, T, size(sp)) : similar(A,  size(sp))
 
+Base.cat(sp1::CoordinateSpace{T,N},sp2::CoordinateSpace{T,M}) where {T,N,M} = CoordinateSpace(T,(sp1.size...,sp2.size...)) 
+Base.cat(sp1::CoordinateSpace{T,N},sp2::NTuple) where {T,N} = CoordinateSpace(T,(sp1.size...,sp2...)) 
+Base.cat(sp1::NTuple,sp2::CoordinateSpace{T,N}) where {T,N} = CoordinateSpace(T,(sp1...,sp2.size...)) 
+
+
+
 promote_space(args...)  = 
  	CoordinateSpace(promote_type(map(eltype,args)...),map(x -> size(x)[1], Broadcast.combine_axes(args...)) )
