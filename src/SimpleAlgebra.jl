@@ -7,7 +7,7 @@ using Adapt
 using InverseFunctions
 import InverseFunctions:inverse
 using  KernelAbstractions
-
+using ArrayTools
 
 export  AbstractMap,AbstractCost
 export  AbstractDomain,

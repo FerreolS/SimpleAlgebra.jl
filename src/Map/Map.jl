@@ -98,3 +98,4 @@ end =#
 
 include("./OperationOnMap.jl")
 include("./MapReduceSum.jl")
+include("./MapMap.jl")
