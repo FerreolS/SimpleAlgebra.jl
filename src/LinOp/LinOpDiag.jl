@@ -9,8 +9,10 @@ end
 outputspace(A::LinOpIdentity) = A.inputspace
 
 
-LinOpIdentity(sz::NTuple) = LinOpIdentity(CoordinateSpace(sz))
+LinOpIdentity(::Type{T},sz::NTuple) where T = LinOpIdentity(CoordinateSpace(T,sz))
+LinOpIdentity(sz::NTuple) = LinOpIdentity(Number,CoordinateSpace(sz))
 LinOpIdentity(sz::Int) = LinOpIdentity(Tuple(sz))
+LinOpIdentity(::Type{T},sz::Int) where T = LinOpIdentity(T,Tuple(sz))
 LinOpIdentity(inputspace::I) where {I<:AbstractDomain} = LinOpIdentity{I}(inputspace) 
 function Base.one(A::AbstractMap{I,I}) where {I<:AbstractDomain}
 	isendomorphism(A)|| throw(SimpleAlgebraFailure("Input is not an endomorphism"))
@@ -108,7 +110,13 @@ end
 LinOpScale(sz::Int, scale) = LinOpScale(Tuple(sz),scale)
 LinOpScale(scale) = LinOpScale((), scale)
 
-apply_(A::LinOpScale, x)  = A.scale * x
+#= function apply_(A::LinOpScale, x)
+    y = similar(x);
+	apply_!(A::LinOpScale, y, x)
+end =#
+function apply_!(A::LinOpScale, y, x)
+    @. y = A.scale * x
+end
 
 apply_adjoint_(A::LinOpScale, x) =  conj(A.scale) * x
 
@@ -137,12 +145,11 @@ end
 add( B::LinOpIdentity,A::LinOpScale)  = add(A,B)
 add(A::LinOpScale , B::LinOpScale)  = LinOpScale(inputspace(A),outputspace(A), A.scale + B.scale )
 
-
 inverse(A::LinOpScale) = LinOpScale(outputspace(A),inputspace(A), inv(A.scale) )
 
-Adapt.adapt_storage(::Type{A}, x::LinOpScale) where {A<:AbstractArray} = x 
-Adapt.adapt_storage(::Type{T}, x::LinOpScale)  where {T<:Number} = LinOpScale(inputspace(x),T(x.scale))
-
+#Adapt.adapt_storage(::Type{A}, x::LinOpScale) where {A<:AbstractArray} = x 
+#Adapt.adapt_storage(::Type{T}, x::LinOpScale)  where {T<:Number} = LinOpScale(inputspace(x),T(x.scale))
+#Adapt.adapt_storage(::Type{T}, x::LinOpScale{I,O,C})  where {I,O,T<:AbstractFloat,C<:Complex} = adapt(AbstractArray{Complex{T}}, x)
 ### DIAGONAL (element-wise multiplication) 
 
 struct LinOpDiag{I<:CoordinateSpace,O<:CoordinateSpace,D<:AbstractArray} <:  AbstractLinOp{I,O}
@@ -221,3 +228,6 @@ Base.:\(A::LinOpDiag{I,O,D1}, B::LinOpDiag{I,O,D2})   where {I,O,D1,D2} = LinOpD
 Base.:/(A::LinOpDiag{I,O,D1}, B::LinOpDiag{I,O,D2})   where {I,O,D1,D2} = LinOpDiag(inputspace(A),outputspace(A),@. A.diag / B.diag)
 
 inverse(A::LinOpDiag{I,O,D}) where {T,I,O,D<:AbstractArray{T}} = LinOpDiag(outputspace(A),inputspace(A), one(T)./(A.diag) )
+
+Adapt.adapt_storage(::Type{T}, x::LinOpDiag{I,O,D})  where {I,O,T<:Real,C<:Complex,D<:AbstractArray{C}} = adapt(Base.typename(D).wrapper{Complex{T}}, x)
+Adapt.adapt_storage(::Type{A}, x::LinOpDiag{I,O,D})  where {I,T<:Real,A<:AbstractArray{T},O,C<:Complex,D<:AbstractArray{C}} = adapt(Base.typename(A).wrapper{Complex{T}}, x)
