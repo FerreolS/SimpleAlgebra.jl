@@ -54,3 +54,11 @@ Base.cat(sp1::NTuple,sp2::CoordinateSpace{T,N}) where {T,N} = CoordinateSpace(T,
 
 promote_space(args...)  = 
  	CoordinateSpace(promote_type(map(eltype,args)...),map(x -> size(x)[1], Broadcast.combine_axes(args...)) )
+
+Adapt.adapt_storage(::Type{A}, x::CoordinateSpace{T,N}) where {T,N,A<:AbstractArray{T}} =  x
+Adapt.adapt_storage(::Type{A}, x::CoordinateSpace{Tx,N}) where {T,Tx,N,A<:AbstractArray{T}} = isconcretetype(Tx) ? CoordinateSpace(T,x) : x
+Adapt.adapt_storage(::Type{T}, x::CoordinateSpace)  where {T<:Number} = CoordinateSpace(T,x)
+Adapt.adapt_storage(::Type{T}, x::CoordinateSpace{C,N})  where {N,T<:Real,C<:Complex} = CoordinateSpace(Complex{T},x)
+Adapt.adapt_storage(::Type{A}, x::CoordinateSpace{C,N}) where {N,T<:Real,C<:Complex,A<:AbstractArray{T}} = CoordinateSpace(Complex{T},x)
+Adapt.adapt_storage(::Type{T}, x::CoordinateSpace{C,N})  where {N,T<:Complex,C<:Complex} = CoordinateSpace(T,x)
+Adapt.adapt_storage(::Type{A}, x::CoordinateSpace{C,N}) where {N,T<:Complex,C<:Complex,A<:AbstractArray{T}} = CoordinateSpace(T,x)

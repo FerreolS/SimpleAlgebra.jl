@@ -5,6 +5,8 @@ function Adapt.adapt_storage(::Type{CUDA.CuArray}, x::LinOpDFT)
     Adapt.adapt_storage(CUDA.CuArray{eltype(inputspace(x))}, x)
 end
 
+Adapt.adapt_storage(::CUDA.CuArrayKernelAdaptor, x::AbstractMap) = adapt(CuArray{Float32}, x)
+Adapt.adapt_storage(::CUDA.CuArrayKernelAdaptor, x::AbstractDomain) = adapt(CuArray{Float32}, x)
 
 function Adapt.adapt_storage(::Type{CUDA.CuArray{T}}, x::LinOpDFT) where  {T}
     dims = inputsize(x)
