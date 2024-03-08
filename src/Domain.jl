@@ -1,18 +1,16 @@
 abstract type AbstractDomain end
 
 struct CoordinateSpace{T,N} <: AbstractDomain
-	eltype::Type
 	size::NTuple{N,Int}
-	#CoordinateSpace{T,N}()
 end #EuclidianSpace?
 
-const AbstractCoordinateSpace{N} =  CoordinateSpace{T,N} where T
+#const AbstractCoordinateSpace{N} =  CoordinateSpace{T,N} where T
 
 
 CoordinateSpace(sz::Int) = CoordinateSpace(Tuple(sz)) 
 CoordinateSpace(sz::NTuple) = CoordinateSpace(Number,sz) 
-CoordinateSpace(T::Type,sz::Int) = CoordinateSpace(T,Tuple(sz)) 
-CoordinateSpace(T::Type,sz::NTuple{N}) where { N} = CoordinateSpace{T,N}(T,sz)
+CoordinateSpace(T::Type,sz::Int) = CoordinateSpace{T,1}(Tuple(sz)) 
+CoordinateSpace(T::Type,sz::NTuple{N}) where { N} = CoordinateSpace{T,N}(sz)
 CoordinateSpace{T,0}() where T = CoordinateSpace(T,()) 
 CoordinateSpace(::Type{T},sp::CoordinateSpace) where T = CoordinateSpace(T,sp.size)
 CoordinateSpace(::Type{T},sp::CoordinateSpace{T,N}) where {T,N} = sp
@@ -20,8 +18,7 @@ const Scalar{T} = CoordinateSpace{T,0} where T
 Scalar() = Scalar{Number}()
 
 Base.size(sp::S) where{S<:CoordinateSpace} = sp.size
-Base.size(sp::AbstractCoordinateSpace{N}, d) where {N} = d::Integer <= N ? size(sp)[d] : 1
-#bytesize(sp::S) where {T,N,S<:CoordinateSpace{T,N}} = length(sp) * sizeof(T)
+Base.size(sp::CoordinateSpace{T,N}, d) where {T,N} = d::Integer <= N ? size(sp)[d] : 1
 
 Base.length(sp::S) where{S<:CoordinateSpace} = prod(sp.size)
 Base.ndims(::CoordinateSpace{T,N}) where {T,N} = N
@@ -44,8 +41,8 @@ Base.issubset(::Type{<:AbstractDomain},::Type{<:AbstractDomain}) = false
 
 Base.zeros(sp::CoordinateSpace{T,N}) where {T,N} = zeros(T,size(sp))
 Base.ones(sp::CoordinateSpace{T,N}) where {T,N} = zeros(T,size(sp))
-Base.zeros(::Type{T},sp::CoordinateSpace{N}) where {T,N} = zeros(T,size(sp))
-Base.ones(::Type{T},sp::CoordinateSpace{N}) where {T,N} = zeros(T,size(sp))
+Base.zeros(::Type{T},sp::CoordinateSpace) where {T} = zeros(T,size(sp))
+Base.ones(::Type{T},sp::CoordinateSpace) where {T} = zeros(T,size(sp))
 
 Base.similar(A::AbstractArray, sp::CoordinateSpace{T,N}) where {T,N} = isconcretetype(T) ? similar(A, T, size(sp)) : similar(A,  size(sp))
 

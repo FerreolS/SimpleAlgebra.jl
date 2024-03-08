@@ -25,7 +25,7 @@ function SumMap(A::D1, B::D2) where {I,OL,OR, D1<:AbstractMap{I,OL},  D2<:Abstra
 	return SumMap(insp,outsp,A,B)
 end
 
-function SumMap(A::D1, v::D2) where {N,I,O<:AbstractCoordinateSpace{N},T, D1<:AbstractMap{I,O},  D2<:AbstractArray{T,N}} 
+function SumMap(A::D1, v::D2) where {I,O<:CoordinateSpace, D1<:AbstractMap{I,O},  D2<:AbstractArray} 
 	v ∈ outputspace(A)  || throw(SimpleAlgebraFailure("The size of the added array must be of the size of the output: $(outputsize(A))"))
 	return SumMap(inputspace(A),outputspace(A),A,v)
 end

@@ -11,7 +11,7 @@ using ArrayTools
 
 export  AbstractMap,AbstractCost
 export  AbstractDomain,
-        CoordinateSpace,AbstractCoordinateSpace,
+        CoordinateSpace,
         inputspace, outputspace,
         inputsize, outputsize,
         inputtype, outputtype

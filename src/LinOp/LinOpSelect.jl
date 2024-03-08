@@ -1,9 +1,9 @@
-struct LinOpSelect{N,I<:AbstractCoordinateSpace{N},O<:CoordinateSpace,D<:Union{(AbstractArray{T,N} where T),Number}} <:  AbstractLinOp{I,O} 
+struct LinOpSelect{N,I<:CoordinateSpace,O<:CoordinateSpace,D<:Union{(AbstractArray{T,N} where T),Number}} <:  AbstractLinOp{I,O} 
 	inputspace::I
 	outputspace::O
 	index::Vector{CartesianIndex{N}}
 	zeroarray::D
-	LinOpSelect(inputspace::I,outputspace::O, list::Vector{CartesianIndex{N}},zeroarray::D) where {T,N,I<:AbstractCoordinateSpace{N},O<:CoordinateSpace,D<:Union{AbstractArray{T,N},T}} =  new{N,I,O,D}(inputspace,outputspace,list,zeroarray)
+	LinOpSelect(inputspace::I,outputspace::O, list::Vector{CartesianIndex{N}},zeroarray::D) where {TI,T,N,I<:CoordinateSpace{TI,N},O<:CoordinateSpace,D<:Union{AbstractArray{T,N},T}} =  new{N,I,O,D}(inputspace,outputspace,list,zeroarray)
 	#LinOpSelect(::Type{T},inputspace::I,outputspace::O, list::Vector{CartesianIndex{N}},zeroarray::D) where {T<:Number,N,I<:AbstractCoordinateSpace{N},O<:CoordinateSpace,D<:Union{AbstractArray{T,N},T}} =  new{T,N,I,O,D}(inputspace,outputspace,list)
 end
 
