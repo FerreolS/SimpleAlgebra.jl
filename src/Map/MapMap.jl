@@ -56,15 +56,26 @@ end
 function computeMapMapjacobian!(y,map::AbstractMap, v, x)  
 	ndrange = size(x)[(ndims(inputspace(map))+1):end]
 	backend =get_backend(x)
-	MapMapJacobian_kernel(backend)(y,v, x,map.apply_jacobian_, ndrange=ndrange)
+	#(_,f) = applicable(apply_jacobian_,map,v,x) ? map.apply_jacobian_ : diff_via_ad(apply_,map, v)
+	MapMapJacobian_kernel(backend)(y,v, x,(a,b)->apply_jacobian_(map,a,b), ndrange=ndrange)
 	synchronize(backend)
+	return y
 end
 
 
-@kernel function MapMap_kernel(Y, V, X,F) 
+@kernel function MapMapJacobian_kernel(Y, V, X,F) 
 	I = @index(Global, Cartesian)
 	Y[..,I] .=  F(V[..,I],X[..,I])
 end
 
+#= function ChainRulesCore.rrule( ::typeof(apply),A::MapMap, v)
+	if applicable(apply_jacobian_,A,v,similar(v,outputspace(A)))
+    	∂Y(Δy) = (NoTangent(),NoTangent(), apply_jacobian_(A,v,Δy))
+    	return apply(A,v), ∂Y
+	else
+		return diff_via_ad(apply_,A, v)
+	end
+end
+ =#
 
 #stack( G.(eachslice(x,dims=(2,3))))
