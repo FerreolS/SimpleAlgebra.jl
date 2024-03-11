@@ -35,6 +35,7 @@ end
 showerror(io::IO, err::SimpleAlgebraFailure) =
     print(io, err.msg)
 
+include("Utils/utils.jl")
 include("Domain.jl")
 include("Utils/Scratchspace.jl")
 include("Map/Map.jl")

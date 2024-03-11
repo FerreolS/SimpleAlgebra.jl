@@ -4,11 +4,11 @@
 
 Base.adjoint(A::AbstractLinOp) = AdjointLinOp(A)
 
-struct AdjointLinOp{I,O,D<:AbstractLinOp} <:  AbstractLinOp{I,O}
+struct AdjointLinOp{I,O,D<:AbstractMap} <:  AbstractLinOp{I,O}
 	parent::D
-	AdjointLinOp(A::AbstractLinOp{O,I}) where {I,O}   = new{I,O,typeof(A)}(A)
 end
-
+AdjointLinOp(A::AbstractLinOp{O,I}) where {I,O}   = AdjointLinOp{I,O,typeof(A)}(A)
+ 
 @functor AdjointLinOp
 
 AdjointLinOp(A::AdjointLinOp) = A.parent
@@ -22,6 +22,20 @@ apply_(A::AdjointLinOp, v) = apply_adjoint(A.parent,v)
 apply_adjoint_(A::AdjointLinOp, v) = apply(A.parent,v)
 
 Base.adjoint(A::AdjointLinOp) = A.parent	
+
+Base.adjoint(A::StackMap{I,O,N,S,II,OI}) where{I,O,N,S<:NTuple{N,AbstractLinOp},II,OI}  = AdjointLinOp(A)
+AdjointLinOp(A::StackMap{I,O,N,S,II,OI}) where{I,O,N,S<:NTuple{N,AbstractLinOp},II,OI}  = AdjointLinOp{I,O,typeof(A)}(A)
+
+
+function apply_adjoint(A::StackMap{I,O,N,S,II,OI},x)  where{I,O,N,S<:NTuple{N,AbstractLinOp},II,OI}
+	y = similar(x,inputspace(A))
+
+	fill!(y, 0)
+    for (iI, iO, M) in zip(A.inputindex,A.outputindex, A.terms)
+		y[iI] .+= apply_adjoint(M,reshape(x[iO],outputsize(M)))
+	end 
+	return y
+end
 
 
 ### COMPOSITION ###

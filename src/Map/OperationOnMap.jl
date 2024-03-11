@@ -100,3 +100,72 @@ apply_(A::CompositionMap, v) = apply(A.left,apply(A.right,v))
 #apply_jacobian_(A::CompositionMap, v, x) = apply_jacobian_(A.right,apply_jacobian_(A.left,v,x),A.left*x)
 
 inverse(A::CompositionMap) = inverse(A.right) * inverse(A.left)
+
+struct StackMap{I,O,N,S<:NTuple{N,AbstractMap},II,OI} <:  AbstractMap{I,O}
+	inputspace::I
+	outputspace::O
+	terms::S
+	inputindex::II
+	outputindex::OI
+end	
+@functor StackMap
+
+
+
+function apply_(A::StackMap, x)
+	y = similar(x,outputspace(A))
+	apply_!(y,A::StackMap, x)
+end
+
+function apply_!(y,A::StackMap, x) 
+	fill!(y, 0)
+    for (I, O, M) in zip(A.inputindex,A.outputindex, A.terms)
+		y[O] .+= reshape(M*reshape(x[I],inputsize(M)),size(y[O]))
+	end 
+	return y
+end
+
+
+
+function apply_jacobian_(A::StackMap, v, x)
+	y = similar(x,inputspace(A))
+	fill!(y, 0)
+    for (I, O, M) in zip(A.inputindex,A.outputindex, A.terms)
+		y[I] .+= apply_jacobian(M,reshape(v[I],inputsize(M)),reshape(x[O],outputsize(M)))
+	end 
+	return y
+end
+
+function StackMap(terms::NTuple{N,AbstractMap}; indims=1, outdims=1, reversed=false) where N
+	ind2c = Base.dims2cat(indims)
+	insize = Base.cat_shape(ind2c,inputsize.(terms))
+	intype = narrow_type( inputtype.(terms)...)
+	inspace = CoordinateSpace(intype,insize)
+
+	outd2c = Base.dims2cat(outdims)
+	#outsize = Base.cat_shape(outd2c,outputsize.(terms))
+	outsize = Base.cat_size_shape(outd2c,outputspace.(terms)...)
+	outtype = narrow_type( outputtype.(terms)...)
+	outspace = CoordinateSpace(outtype,outsize)
+
+	inputindex = Vector{CartesianIndices}(undef,N)
+	outputindex = Vector{CartesianIndices}(undef,N)
+
+	inoff = CartesianIndex(zeros(Int,ndims(inspace))...)
+	outoff = CartesianIndex(zeros(Int,ndims(outspace))...)
+	for  (index, op) ∈ enumerate(terms) 
+		inputindex[index] = inoff .+ CartesianIndices(extend_axes(axes(inputspace(op)),ndims(inspace)))
+		inoff = CartesianIndex(last(inputindex[index]).I .* ind2c)
+
+		outputindex[index] = outoff .+ CartesianIndices(extend_axes(axes(outputspace(op)),ndims(outspace)))
+		outoff = CartesianIndex(last(outputindex[index]).I .* outd2c)
+	end 
+	if reversed
+		for i ∈ eachindex(outputindex)
+			outputindex[i] = CartesianIndices(reverse(outputindex[i].indices))
+		end
+		outsize = Base.cat_size_shape(outd2c,outputspace.(terms)...)
+		outspace = CoordinateSpace(outtype,reverse(outsize))
+	end
+	return StackMap(inspace,outspace,terms,inputindex,outputindex)
+end
