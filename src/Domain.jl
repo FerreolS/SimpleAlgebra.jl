@@ -19,6 +19,12 @@ Scalar() = Scalar{Number}()
 
 Base.size(sp::S) where{S<:CoordinateSpace} = sp.size
 Base.size(sp::CoordinateSpace{T,N}, d) where {T,N} = d::Integer <= N ? size(sp)[d] : 1
+#bytesize(sp::S) where {T,N,S<:CoordinateSpace{T,N}} = length(sp) * sizeof(T)
+function Base.axes(A::CoordinateSpace{T,N}, d) where {T,N}
+    @inline
+    d::Integer <= N ? axes(A)[d] : Base.OneTo(1)
+end
+
 
 Base.length(sp::S) where{S<:CoordinateSpace} = prod(sp.size)
 Base.ndims(::CoordinateSpace{T,N}) where {T,N} = N
@@ -50,7 +56,7 @@ Base.cat(sp1::CoordinateSpace{T,N},sp2::CoordinateSpace{T,M}) where {T,N,M} = Co
 Base.cat(sp1::CoordinateSpace{T,N},sp2::NTuple) where {T,N} = CoordinateSpace(T,(sp1.size...,sp2...)) 
 Base.cat(sp1::NTuple,sp2::CoordinateSpace{T,N}) where {T,N} = CoordinateSpace(T,(sp1...,sp2.size...)) 
 
-
+Base.cat_size(A::CoordinateSpace) = size(A)
 
 promote_space(args...)  = 
  	CoordinateSpace(promote_type(map(eltype,args)...),map(x -> size(x)[1], Broadcast.combine_axes(args...)) )
