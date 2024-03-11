@@ -114,6 +114,7 @@ LinOpScale(scale) = LinOpScale((), scale)
     y = similar(x);
 	apply_!(A::LinOpScale, y, x)
 end =#
+apply_(A::LinOpScale, x)  = A.scale * x
 function apply_!(A::LinOpScale, y, x)
     @. y = A.scale * x
 end
