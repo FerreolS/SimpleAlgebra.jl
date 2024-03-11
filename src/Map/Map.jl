@@ -95,6 +95,19 @@ end =#
     Map_pullback(Δy) = (NoTangent(),NoTangent(), apply_jacobian_(A, v,Δy))
     return  apply_(A,v), Map_pullback
 end =#
+diff_via_ad(_,_,_) = throw(SimpleAlgebraFailure("must use Zygote for auto diff"))
+
+
+function ChainRulesCore.rrule( ::typeof(apply),A::AbstractMap, v)
+	if applicable(apply_jacobian_,A,v,similar(v,outputspace(A)))
+    	∂Y(Δy) = (NoTangent(),NoTangent(), apply_jacobian_(A,v,Δy))
+    	return apply(A,v), ∂Y
+	else
+		return diff_via_ad(apply_,A, v)
+	end
+end
+
+
 
 include("./OperationOnMap.jl")
 include("./MapReduceSum.jl")

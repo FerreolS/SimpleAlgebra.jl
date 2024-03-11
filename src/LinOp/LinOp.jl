@@ -30,7 +30,7 @@ function ChainRulesCore.rrule( ::typeof(apply),A::AbstractLinOp, v)
     	∂Y(Δy) = (NoTangent(),NoTangent(), apply_adjoint_(A,Δy))
     	return apply(A,v), ∂Y
 	else
-		return ChainRulesCore.rrule_via_ad(config,apply_,A, v)
+		return  diff_via_ad(apply_,A, v)
 	end
 end
 
@@ -39,7 +39,7 @@ function ChainRulesCore.rrule( ::typeof(apply_adjoint),A::AbstractLinOp, v)
 		∂Y(Δy) = (NoTangent(),NoTangent(), apply_(A,Δy))
 		return apply_adjoint(A,v), ∂Y
 	else
-		return ChainRulesCore.rrule_via_ad(config,apply_adjoint_,A, v)
+		return diff_via_ad(apply_,A, v)
 	end
 end
 
