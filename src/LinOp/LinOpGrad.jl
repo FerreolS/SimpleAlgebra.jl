@@ -55,32 +55,66 @@ apply_adjoint_(::LinOpGrad, x) =  compute_grad_adjoint(x)
 
 function compute_grad(x::AbstractArray{T,N}) where {T,N}
     sz = size(x)
-	Y = similar(x,sz...,N)
-	compute_grad!(Y,x)
+	#Y = similar(x,sz...,N)
+	#compute_grad!(Y,x)
+	backend = get_backend(x)
+	Y = KernelAbstractions.zeros(backend, T, sz...,N)
+	compute_grad!(backend,Y,x)
 	return Y
 end
 
 
 function compute_grad_adjoint(x::AbstractArray{T,N}) where {T,N}
 	sz = size(x)
-	Y = similar(x,sz[1:end-1])
-	compute_grad_adjoint!(Y,x)
+	#Y = similar(x,sz[1:end-1])
+	#compute_grad_adjoint!(Y,x)
+	backend = get_backend(x)
+	Y = KernelAbstractions.zeros(backend,T, sz[1:end-1])
+	compute_grad_adjoint!(backend,Y,x)
 	return Y
 end
 
 # FIXME  should use some Traits mechanism to swith to Int64 for array larger than 2^32-1. (Int32 indexing should be more adapted to  GPU however, I'm not sure it is really needed)
 
-compute_grad!(Y,X) = compute_grad!(Int32,Y,X)
+compute_grad!(Y,X) = compute_grad!(UInt32,Y,X)
 
-compute_grad_adjoint!(Y,X) = compute_grad_adjoint!(Int32,Y,X)
+compute_grad_adjoint!(Y,X) = compute_grad_adjoint!(UInt32,Y,X)
 
+@generated function compute_grad!(backend::Backend,Y::AbstractArray{T,M},X::AbstractArray{T,N}) where {M,N,T}
+	M != N+1 && throw(SimpleAlgebraFailure("LinOpGrad output must have one more dimensions than the input"))
+	code =Expr(:block)
+	#push!(code.args,:(fill!(Y,zero(T))))
+	for d ∈ 1:N
+		indices = generate_indices(N, d, 1)
+		#indices =  @SVector [i==d ? 1 : 0 for i = 1:N]
+		Id = CartesianIndex(indices...)
+		push!(code.args, :( difN(backend)(Y,X,$Id,$d,ndrange = size(X) .- tuple($indices...))))
+	end
+	push!(code.args,:(synchronize(backend)))
+	push!(code.args,:(return Y))
+	return code 
+end
 
+@generated function compute_grad_adjoint!(backend::Backend,Y::AbstractArray{T,N},X::AbstractArray{T,M}) where {M,N,T}
+	N != M-1 && throw(SimpleAlgebraFailure("LinOpGrad output must have one more dimensions than the input"))
+	code =Expr(:block)
+	#push!(code.args,:(fill!(Y,zero(T))))
+	for d ∈ 1:N
+		indices = generate_indices(N, d, 1)
+		Id = CartesianIndex(indices...)
+		push!(code.args, :( difN_adjoint(backend)(Y,X,$Id,$d,ndrange = size(Y) .- tuple($indices...))))
+	end 
+	push!(code.args,:(synchronize(backend)))
+	push!(code.args,:(return Y))
+   return code
+
+end
 
 @generated function compute_grad!(::Type{T2},Y::AbstractArray{T,M},X::AbstractArray{T,N}) where {M,N,T,T2}
 	M != N+1 && throw(SimpleAlgebraFailure("LinOpGrad output must have one more dimensions than the input"))
 	code =Expr(:block)
 	push!(code.args,:(fill!(Y,zero(T))))
-	for d::T2 = 1:N
+	for d ∈ T2.(1:N)
 		indices = generate_indices(T2,N, d, 1)
 		Id = CartesianIndex(indices...)
 		push!(code.args, :( difN(get_backend(X))(Y,X,$Id,$d,ndrange = size(X) .- tuple($indices...))))
@@ -94,7 +128,7 @@ end
 	N != M-1 && throw(SimpleAlgebraFailure("LinOpGrad output must have one more dimensions than the input"))
 	code =Expr(:block)
 	push!(code.args,:(fill!(Y,zero(T))))
-	for d::T2 = 1:N
+	for d ∈ T2.(1:N)
 		indices = generate_indices(T2,N, d, 1)
 		Id = CartesianIndex(indices...)
 		push!(code.args, :( difN_adjoint(get_backend(X))(Y,X,$Id,$d,ndrange = size(Y) .- tuple($indices...))))
@@ -106,24 +140,33 @@ end
 end
 
 function generate_indices(::Type{T2},num_dims, d, offset) where{T2}
-	indices = zeros(T2,num_dims)
-	indices[d] = T2(offset)
+	indices = SVector{num_dims}(i==d ? T2(offset) : T2(0) for i = 1:num_dims)
+	#indices = zeros(T2,num_dims)
+	#indices[d] = T2(offset)
 	return indices
 end
-generate_indices(num_dims, d, offset) = generate_indices(Int,num_dims, d, offset)
+
+function generate_indices(num_dims, d, offset) 
+	indices = SVector{num_dims}(i==d ? offset : 0 for i = 1:num_dims)
+	#indices = zeros(T2,num_dims)
+	#indices[d] = T2(offset)
+	return indices
+end
+
+#generate_indices(num_dims, d, offset) = generate_indices(Int,num_dims, d, offset)
 
 
 
 @kernel function difN_adjoint(Y, X,idx,d) 
 	I = @index(Global, Cartesian)
-	Y[I] += X[I,d]
-	Y[I + idx] -= X[I,d]
+	@inbounds Y[I] += X[I,d]
+	@inbounds Y[I + idx] -= X[I,d]
 end
 
 
 @kernel function difN(Y, X,idx,d) 
 	I = @index(Global, Cartesian)
-	Y[I,d] = X[I] - X[I + idx]
+	@inbounds Y[I,d] = X[I] - X[I + idx]
 end
 
 #= 
