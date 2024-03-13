@@ -20,16 +20,16 @@ BenchmarkTools.Trial: 946 samples with 1 evaluation.
 x = randn(Float32,1000,1000,50);
 
 julia> @benchmark G'*G*x
-        BenchmarkTools.Trial: 6 samples with 1 evaluation.
- Range (min … max):  871.211 ms … 951.214 ms  ┊ GC (min … max): 0.12% … 5.56%
- Time  (median):     939.039 ms               ┊ GC (median):    5.52%
- Time  (mean ± σ):   928.122 ms ±  29.877 ms  ┊ GC (mean ± σ):  4.55% ± 2.19%
+BenchmarkTools.Trial: 26 samples with 1 evaluation.
+Range (min … max):  113.319 ms … 440.345 ms  ┊ GC (min … max):  0.00% … 44.63%
+Time  (median):     181.088 ms               ┊ GC (median):    17.66%
+Time  (mean ± σ):   196.662 ms ±  66.548 ms  ┊ GC (mean ± σ):  20.12% ± 15.00%
 
-  █                                    █            █  █    █ █  
-  █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁█▁▁▁▁▁▁▁▁▁▁▁▁█▁▁█▁▁▁▁█▁█ ▁
-  871 ms           Histogram: frequency by time          951 ms <
+	 ▁  █ ▁▁ ▁      ▁                                           
+ ▆▁▁▁█▁▁█▆██▁█▆▆▆▁▆▆█▁▆▁▆▁▁▁▁▁▆▁▁▁▁▁▁▁▆▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▆ ▁
+ 113 ms           Histogram: frequency by time          440 ms <
 
- Memory estimate: 763.02 MiB, allocs estimate: 1133.
+Memory estimate: 772.08 MiB, allocs estimate: 197760.
 ```
 """
 
