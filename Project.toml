@@ -1,7 +1,7 @@
 name = "SimpleAlgebra"
 uuid = "c653966b-d9be-4146-a61d-9a13ffa1fe75"
-authors = ["ferreol <ferreol.soulez@free.fr>"]
 version = "0.1.0"
+authors = ["ferreol <ferreol.soulez@univ-lyon1.fr>"]
 
 [deps]
 AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
@@ -12,8 +12,6 @@ FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
 Functors = "d9f16b24-f501-4c13-a1f2-28368ffc5196"
 InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
 KernelAbstractions = "63c18a36-062a-441e-b654-da1e3ab1ce7c"
-PackageExtensionCompat = "65ce6f38-6b18-4e1d-a461-8949797d7930"
-Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [weakdeps]
@@ -29,3 +27,20 @@ SimpleAlgebraFluxExt = ["CUDA", "Flux"]
 SimpleAlgebraLinearAlgebraExt = ["LinearAlgebra"]
 SimpleAlgebraUnitfulExt = ["Unitful"]
 SimpleAlgebraZygoteExt = ["Zygote"]
+
+[compat]
+AbstractFFTs = "1"
+Adapt = "3, 4"
+ArrayTools = "0.3"
+CUDA = "4, 5"
+ChainRulesCore = "1"
+FFTW = "1"
+Flux = "0.14, 0.15, 0.16"
+Functors = "0.4, 0.5"
+InverseFunctions = "0.1.10"
+KernelAbstractions = "0.9"
+NonuniformFFTs = "0.8"
+StaticArrays = "1"
+Unitful = "1"
+Zygote = "0.6, 0.7"
+julia = "1.10"

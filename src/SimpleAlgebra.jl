@@ -1,7 +1,6 @@
 module SimpleAlgebra
 
 using ChainRulesCore
-using Requires
 using Functors
 using Adapt
 using InverseFunctions
@@ -42,10 +41,5 @@ include("Utils/Scratchspace.jl")
 include("Map/Map.jl")
 include("LinOp/LinOp.jl")
 include("Cost/Cost.jl")
-
-using PackageExtensionCompat
-function __init__()
-    @require_extensions
-end
 
 end # module SimpleAlgebra
