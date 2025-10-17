@@ -1,174 +1,197 @@
-
 import AbstractFFTs: Plan, fftshift, ifftshift
 using FFTW
 import FFTW: fftwNumber, fftwReal, fftwComplex, FFTWPlan, cFFTWPlan, rFFTWPlan
 import Adapt: adapt_storage
 # All planning flags.
-const PLANNING = (FFTW.ESTIMATE | FFTW.MEASURE | FFTW.PATIENT |
-                  FFTW.EXHAUSTIVE | FFTW.WISDOM_ONLY)
+const PLANNING = (
+    FFTW.ESTIMATE | FFTW.MEASURE | FFTW.PATIENT |
+        FFTW.EXHAUSTIVE | FFTW.WISDOM_ONLY
+)
 
-
-struct LinOpDFT{I,O,
-					F<:Plan,     # type of forward plan
-					B<:Plan,      # type of backward plan
-				} <:  AbstractLinOp{I,O}
+struct LinOpDFT{
+        I, O,
+        F <: Plan,     # type of forward plan
+        B <: Plan,      # type of backward plan
+    } <: AbstractLinOp{I, O}
     inputspace::I
     outputspace::O
     forward::F             # plan for forward transform
     backward::B            # plan for backward transform
-    LinOpDFT(inputspace::I, outputspace::O, forward::F, backward::B) where {I,O,F,B} = new{I,O,F,B}(inputspace,outputspace,forward,backward)
-	# unitary::Bool ?
+    LinOpDFT(inputspace::I, outputspace::O, forward::F, backward::B) where {I, O, F, B} = new{I, O, F, B}(inputspace, outputspace, forward, backward)
+    # unitary::Bool ?
 end
 
 
-LinOpDFT(dims::NTuple;kwds...) = LinOpDFT(ComplexF64,dims; kwds...)
+LinOpDFT(dims::NTuple; kwds...) = LinOpDFT(ComplexF64, dims; kwds...)
 
 # Real-to-complex FFT.
-function LinOpDFT(::Type{T},
-                	dims::NTuple{N,Int};
-                    timelimit::Real = FFTW.NO_TIMELIMIT,
-                    flags::Integer = FFTW.MEASURE) where {T<:fftwReal,N}
+function LinOpDFT(
+        ::Type{T},
+        sz::NTuple{N, Int};
+        dims = 1:N,
+        timelimit::Real = FFTW.NO_TIMELIMIT,
+        flags::Integer = FFTW.MEASURE
+    ) where {T <: fftwReal, N}
     # Check arguments and build dimension list of the result of the forward
     # real-to-complex (r2c) transform.
     planning = check_flags(flags)
+
 
     # Compute the plans with suitable FFTW flags.  The forward transform (r2c)
     # must preserve its input, while the backward transform (c2r) may destroy
     # it (in fact there are no input-preserving algorithms for
     # multi-dimensional c2r transforms implemented in FFTW, see
     # http://www.fftw.org/doc/Planner-Flags.html).
-    forward = plan_rfft(Array{T}(undef, dims);
-                        flags = (planning | FFTW.PRESERVE_INPUT),
-                        timelimit = timelimit)
-    backward = plan_brfft(Array{Complex{T}}(undef, forward.osz), dims[1];
-                          flags = (planning | FFTW.DESTROY_INPUT),
-                          timelimit = timelimit)
+    forward = plan_rfft(
+        Array{T}(undef, sz), dims;
+        flags = (planning | FFTW.PRESERVE_INPUT),
+        timelimit = timelimit
+    )
+    backward = plan_brfft(
+        Array{Complex{T}}(undef, forward.osz), sz[1], dims;
+        flags = (planning | FFTW.DESTROY_INPUT),
+        timelimit = timelimit
+    )
 
     # Build operator.
 
-	inputspace = CoordinateSpace(T,forward.sz)
-	outputspace = CoordinateSpace(Complex{T},forward.osz)
-    F = typeof(forward)
-    B = typeof(backward)
+    inputspace = CoordinateSpace(T, forward.sz)
+    outputspace = CoordinateSpace(Complex{T}, forward.osz)
     return LinOpDFT(inputspace, outputspace, forward, backward)
 end
 
 
 # Complex-to-complex FFT.
-function LinOpDFT(::Type{T},
-                     dims::NTuple{N,Int};
-                     timelimit::Real = FFTW.NO_TIMELIMIT,
-                     flags::Integer = FFTW.MEASURE) where {T<:fftwComplex,N}
+function LinOpDFT(
+        ::Type{T},
+        sz::NTuple{N, Int};
+        dims = 1:N,
+        timelimit::Real = FFTW.NO_TIMELIMIT,
+        flags::Integer = FFTW.MEASURE
+    ) where {T <: fftwComplex, N}
     # Check arguments.  The input and output of the complex-to-complex
     # transform have the same dimensions.
     planning = check_flags(flags)
-    temp = Array{T}(undef, dims)
+    temp = Array{T}(undef, sz)
 
     # Compute the plans with suitable FFTW flags.  For maximum efficiency, the
     # transforms are always applied in-place and thus cannot preserve their
     # inputs.
-    forward = plan_fft(temp; flags = (planning | FFTW.DESTROY_INPUT),
-                        timelimit = timelimit)
-    backward = plan_bfft(temp; flags = (planning | FFTW.DESTROY_INPUT),
-                          timelimit = timelimit)
+    forward = plan_fft(
+        temp,
+        dims;
+        flags = (planning | FFTW.DESTROY_INPUT),
+        timelimit = timelimit
+    )
+    backward = plan_bfft(
+        temp,
+        dims;
+        flags = (planning | FFTW.DESTROY_INPUT),
+        timelimit = timelimit
+    )
 
     # Build operator.
 
-	inputspace = CoordinateSpace(T,forward.sz)
-	outputspace = CoordinateSpace(T,forward.osz)
-    F = typeof(forward)
-    B = typeof(backward)
+    inputspace = CoordinateSpace(T, forward.sz)
+    outputspace = CoordinateSpace(T, forward.osz)
     return LinOpDFT(inputspace, outputspace, forward, backward)
 end
 
 
-
 # Constructor for dimensions not specified as a tuple.
-LinOpDFT(T::Type{<:fftwNumber}, dims::Integer...; kwds...) =
-    LinOpDFT(T, dims; kwds...)
+LinOpDFT(T::Type{<:fftwNumber}, sz::Integer...; kwds...) =
+    LinOpDFT(T, sz; kwds...)
 # Constructor for transforms applicable to a given array.
 
-apply_(A::LinOpDFT, v)  = A.forward * v
-apply_adjoint_(A::LinOpDFT, v)  = A.backward * v
+apply_(A::LinOpDFT, v) = A.forward * v
+apply_adjoint_(A::LinOpDFT, v) = A.backward * v
 apply_inverse_(A::LinOpDFT, v) = oneunit(eltype(inputspace(A))) ./ length(inputspace(A)) .* (A.backward * v)
 inverse(A::LinOpDFT) = oneunit(eltype(inputspace(A))) / length(inputspace(A)) * AdjointLinOp(A)
 
-apply_!(y, A::LinOpDFT, x)  = FFTW.mul!(y, A.forward,x)
-apply_adjoint_!(y, A::LinOpDFT, x)  = FFTW.mul!(y,A.backward,x)
+apply_!(y, A::LinOpDFT, x) = FFTW.mul!(y, A.forward, x)
+apply_adjoint_!(y, A::LinOpDFT, x) = FFTW.mul!(y, A.backward, x)
 
-function compose(left::D, right::C)  where {I,O,F,B,C<:LinOpDFT{I,O,F,B},D<:AdjointLinOp{O,I,C}} 
-    if left.parent===right
-		return LinOpScale(inputsize(right),length(inputspace(right)))
-	end
-	return CompositionMap(left,right)
+function compose(left::D, right::C) where {I, O, F, B, C <: LinOpDFT{I, O, F, B}, D <: AdjointLinOp{O, I, C}}
+    if left.parent === right
+        return LinOpScale(inputsize(right), length(inputspace(right)))
+    end
+    return CompositionMap(left, right)
 end
 
 
-function compose(left::C, right::D)  where {I,O,F,B,C<:LinOpDFT{I,O,F,B},D<:AdjointLinOp{O,I,C}} 
-    if left===right.parent
-		return LinOpScale(inputsize(right),length(inputspace(right)))
-	end
-	return CompositionMap(left,right)
+function compose(left::C, right::D) where {I, O, F, B, C <: LinOpDFT{I, O, F, B}, D <: AdjointLinOp{O, I, C}}
+    if left === right.parent
+        return LinOpScale(inputsize(right), length(inputspace(right)))
+    end
+    return CompositionMap(left, right)
 end
 
 
-function compose(left::D, right::C)  where {I,O,F,B,C<:LinOpDFT{I,O,F,B},D<:InverseMap{O,I,C}} 
-    if left.parent===right
-		return LinOpIdentity(inputspace(right))
-	end
-	return CompositionMap(left,right)
+function compose(left::D, right::C) where {I, O, F, B, C <: LinOpDFT{I, O, F, B}, D <: InverseMap{O, I, C}}
+    if left.parent === right
+        return LinOpIdentity(inputspace(right))
+    end
+    return CompositionMap(left, right)
 end
 
-function compose(left::C, right::D)  where {I,O,F,B,C<:LinOpDFT{I,O,F,B},D<:InverseMap{O,I,C}} 
-    if left===right.parent
-		return LinOpIdentity(inputspace(right))
-	end
-	return CompositionMap(left,right)
+function compose(left::C, right::D) where {I, O, F, B, C <: LinOpDFT{I, O, F, B}, D <: InverseMap{O, I, C}}
+    if left === right.parent
+        return LinOpIdentity(inputspace(right))
+    end
+    return CompositionMap(left, right)
 end
 
-function ChainRulesCore.rrule( ::typeof(apply_),A::LinOpDFT, v)
-    LinOpDFT_pullback(Δy) = (NoTangent(),NoTangent(), apply_adjoint_(A, Δy))
-    return  apply_(A,v), LinOpDFT_pullback
+function ChainRulesCore.rrule(::typeof(apply_), A::LinOpDFT, v)
+    LinOpDFT_pullback(Δy) = (NoTangent(), NoTangent(), apply_adjoint_(A, Δy))
+    return apply_(A, v), LinOpDFT_pullback
 end
 
-function ChainRulesCore.rrule( ::typeof(apply_adjoint_),A::LinOpDFT, v)
-    LinOpDFT_pullback(Δy) = (NoTangent(),NoTangent(), apply_(A, Δy))
-    return  apply_adjoint_(A,v), LinOpDFT_pullback
+function ChainRulesCore.rrule(::typeof(apply_adjoint_), A::LinOpDFT, v)
+    LinOpDFT_pullback(Δy) = (NoTangent(), NoTangent(), apply_(A, Δy))
+    return apply_adjoint_(A, v), LinOpDFT_pullback
 end
 
-function Adapt.adapt_storage(::Type{A}, x::LinOpDFT) where A<:AbstractArray
-    Adapt.adapt_storage(A{eltype(inputspace(x))}, x)
+function Adapt.adapt_storage(::Type{A}, x::LinOpDFT) where {A <: AbstractArray}
+    return Adapt.adapt_storage(A{eltype(inputspace(x))}, x)
 end
 
-function Adapt.adapt_storage(::Type{A}, x::LinOpDFT) where {T<:fftwNumber,A<:AbstractArray{T}}
-    dims = inputsize(x)
+function Adapt.adapt_storage(::Type{A}, x::LinOpDFT) where {T <: fftwNumber, A <: AbstractArray{T}}
+    sz = inputsize(x)
     planning = planning = check_flags(FFTW.MEASURE)
     timelimit = FFTW.NO_TIMELIMIT
     # Compute the plans with suitable FFTW flags.  For maximum efficiency, the
     # transforms are always applied in-place and thus cannot preserve their
     # inputs.
-    
-    if T<: fftwReal
-        forward = plan_rfft(Array{T}(undef, dims);
-                        flags = (planning | FFTW.PRESERVE_INPUT),
-                        timelimit = timelimit)
 
-        backward = plan_brfft(Array{Complex{T}}(undef, forward.osz), dims[1];
-                          flags = (planning | FFTW.DESTROY_INPUT),
-                          timelimit = timelimit)
+    if T <: fftwReal
+        forward = plan_rfft(
+            Array{T}(undef, sz);
+            flags = (planning | FFTW.PRESERVE_INPUT),
+            timelimit = timelimit
+        )
+
+        backward = plan_brfft(
+            Array{Complex{T}}(undef, forward.osz), sz[1];
+            flags = (planning | FFTW.DESTROY_INPUT),
+            timelimit = timelimit
+        )
     else
-        temp = Array{T}(undef, dims)
-        forward = plan_fft(temp; flags = (planning | FFTW.DESTROY_INPUT),
-                        timelimit = timelimit)
-        backward = plan_bfft(temp; flags = (planning | FFTW.DESTROY_INPUT),
-                          timelimit = timelimit)
+        temp = Array{T}(undef, sz)
+        forward = plan_fft(
+            temp; flags = (planning | FFTW.DESTROY_INPUT),
+            timelimit = timelimit
+        )
+        backward = plan_bfft(
+            temp; flags = (planning | FFTW.DESTROY_INPUT),
+            timelimit = timelimit
+        )
     end
 
 
     # Build operator.
 
-	inputspace = CoordinateSpace(T,forward.sz)
-	outputspace = CoordinateSpace(T,forward.osz)
+    inputspace = CoordinateSpace(T, forward.sz)
+    outputspace = CoordinateSpace(T, forward.osz)
     return LinOpDFT(inputspace, outputspace, forward, backward)
 
 end
@@ -197,7 +220,7 @@ end
 all dimensions after the last one are equal to 1.
 
 """
-get_dimension(dims::NTuple{N,Int}, i::Integer) where {N} =
+get_dimension(dims::NTuple{N, Int}, i::Integer) where {N} =
     (i < 1 ? bad_dimension_index() : i ≤ N ? dims[i] : 1)
 # FIXME: should be in ArrayTools
 bad_dimension_index() = error("invalid dimension index")
@@ -216,7 +239,7 @@ Also see: [`goodfftdims`](@ref), [`rfftdims`](@ref).
 
 """
 goodfftdim(len::Integer) = goodfftdim(Int(len))
-goodfftdim(len::Int) = nextprod([2,3,5], len)
+goodfftdim(len::Int) = nextprod([2, 3, 5], len)
 
 """
 ```julia
@@ -230,7 +253,7 @@ Also see: [`goodfftdim`](@ref), [`rfftdims`](@ref).
 
 """
 goodfftdims(dims::Integer...) = map(goodfftdim, dims)
-goodfftdims(dims::Union{AbstractVector{<:Integer},Tuple{Vararg{Integer}}}) =
+goodfftdims(dims::Union{AbstractVector{<:Integer}, Tuple{Vararg{Integer}}}) =
     map(goodfftdim, dims)
 
 """
@@ -245,7 +268,7 @@ Also see: [`goodfftdim`](@ref).
 
 """
 rfftdims(dims::Integer...) = rfftdims(dims)
-rfftdims(dims::NTuple{N,Integer}) where {N} =
+rfftdims(dims::NTuple{N, Integer}) where {N} =
     ntuple(d -> (d == 1 ? (Int(dims[d]) >>> 1) + 1 : Int(dims[d])), Val(N))
 # Note: The above version is equivalent but much faster than
 #     ((dims[1] >>> 1) + 1, dims[2:end]...)
@@ -294,10 +317,10 @@ function fftfreq(_dim::Integer)
     n = div(dim, 2)
     f = Array{Int}(undef, dim)
     @inbounds begin
-        for k in 1:dim-n
+        for k in 1:(dim - n)
             f[k] = k - 1
         end
-        for k in dim-n+1:dim
+        for k in (dim - n + 1):dim
             f[k] = k - (1 + dim)
         end
     end
@@ -306,15 +329,15 @@ end
 
 function fftfreq(_dim::Integer, step::Real)
     dim = Int(_dim)
-    scl = Cdouble(1/(dim*step))
+    scl = Cdouble(1 / (dim * step))
     n = div(dim, 2)
     f = Array{Cdouble}(undef, dim)
     @inbounds begin
-        for k in 1:dim-n
-            f[k] = (k - 1)*scl
+        for k in 1:(dim - n)
+            f[k] = (k - 1) * scl
         end
-        for k in dim-n+1:dim
-            f[k] = (k - (1 + dim))*scl
+        for k in (dim - n + 1):dim
+            f[k] = (k - (1 + dim)) * scl
         end
     end
     return f
