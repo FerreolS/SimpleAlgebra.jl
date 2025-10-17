@@ -18,6 +18,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+NonuniformFFTs = "cd96f58b-6017-4a02-bb9e-f4d81626177f"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
@@ -25,6 +26,7 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 SimpleAlgebraCUDAExt = ["CUDA"]
 SimpleAlgebraFluxExt = ["CUDA", "Flux"]
 SimpleAlgebraLinearAlgebraExt = ["LinearAlgebra"]
+SimpleAlgebraNonuniformFFTsExt = ["NonuniformFFTs"]
 SimpleAlgebraUnitfulExt = ["Unitful"]
 SimpleAlgebraZygoteExt = ["Zygote"]
 

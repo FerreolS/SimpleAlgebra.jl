@@ -4,28 +4,30 @@ using ChainRulesCore
 using Functors
 using Adapt
 using InverseFunctions
-import InverseFunctions:inverse
-using  KernelAbstractions
+import InverseFunctions: inverse
+using KernelAbstractions
 using ArrayTools
 using StaticArrays
 
-export  AbstractMap,AbstractCost
-export  AbstractDomain,
-        CoordinateSpace,
-        inputspace, outputspace,
-        inputsize, outputsize,
-        inputtype, outputtype
-export  MapReduceSum
-export  AbstractLinOp, 
-        LinOpConv, 
-        LinOpDFT,
-        LinOpIdentity,
-        LinOpScale,
-        LinOpDiag,
-        LinOpSelect,
-        LinOpGrad
+export AbstractMap, AbstractCost
+export AbstractDomain,
+    CoordinateSpace,
+    inputspace, outputspace,
+    inputsize, outputsize,
+    inputtype, outputtype
+export MapReduceSum
+export AbstractLinOp,
+    LinOpConv,
+    LinOpDFT,
+    LinOpIdentity,
+    LinOpScale,
+    LinOpDiag,
+    LinOpSelect,
+    LinOpGrad,
+    LinOpNFFT
+
 export CostL2,
-        CostHyperbolic
+    CostHyperbolic
 
 
 struct SimpleAlgebraFailure <: Exception
