@@ -7,7 +7,6 @@ struct CostL2{I,D<:Union{AbstractArray,Number}} <: AbstractCost{I}
 	CostL2(inputspace::I, data::D) where {I<:CoordinateSpace,D<:Union{AbstractArray,Number}} =  new{I,D}(inputspace,data)
 end
 
-@functor CostL2
 
 
 function CostL2(::Type{T}, data::D) where {T<:Number,T1<:Number,D<:AbstractArray{T1}}  
@@ -59,7 +58,6 @@ struct scaledCostL2{I,D<:Union{AbstractArray,Number},P,N} <: AbstractCost{I}
 	scaledCostL2(inputspace::I, wdata::D,W::P,dims::N) where {I<:CoordinateSpace,D<:Union{AbstractArray,Number},P,N} =  new{I,D,P,N}(inputspace,wdata,W,dims)
 end
 
-@functor scaledCostL2
  
 
 function scaledCostL2(data::D; W=LinOpIdentity(size(data)),dims=Tuple( 1:N)) where {N,T,D<:AbstractArray{T,N}}  

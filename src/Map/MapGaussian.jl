@@ -6,7 +6,6 @@ struct MapGaussian1D{I,O,D<:AbstractArray,N} <:  AbstractMap{I,O}
 		new{I,O,D,length(inputspace)}(inputspace,outputspace,x)
 end
 
-@functor MapGaussian1D
 
 MapGaussian1D(abscisse)  = MapGaussian1D(abscisse,3)
 MapGaussian1D(abscisse,nbparameter)  = MapGaussian1D(Number, abscisse, nbparameter)

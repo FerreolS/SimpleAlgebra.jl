@@ -9,7 +9,6 @@ struct AdjointLinOp{I,O,D<:AbstractMap} <:  AbstractLinOp{I,O}
 end
 AdjointLinOp(A::AbstractLinOp{O,I}) where {I,O}   = AdjointLinOp{I,O,typeof(A)}(A)
  
-@functor AdjointLinOp
 
 AdjointLinOp(A::AdjointLinOp) = A.parent
 
@@ -56,7 +55,6 @@ struct SumLinOp{I,O,D1<:AbstractLinOp{I,O},D2<:AbstractLinOp{I,O}} <:  AbstractL
 end
 add( A::AbstractLinOp,scalar::Number) = add(scalar,A)
 
-@functor SumLinOp
 
 apply_(A::SumLinOp, x) = apply(A.left,x) .+ apply(A.right,x)
 

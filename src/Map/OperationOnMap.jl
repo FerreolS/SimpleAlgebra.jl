@@ -38,7 +38,6 @@ function SumMap(A::D1, a::T) where {I,O,T<:Number, D1<:AbstractMap{I,O}}
 end
 
 
-@functor SumMap
 
 add(A::AbstractMap, B::AbstractMap) = SumMap(A,B)
 add(A::AbstractMap, B::Number)  =  SumMap(A,B)
@@ -64,7 +63,6 @@ struct InverseMap{I,O,D<:AbstractMap} <:  AbstractMap{I,O}
 	InverseMap(A::AbstractMap{O,I}) where {I,O}   = new{I,O,typeof(A)}(A)
 end
 
-@functor InverseMap
 
 InverseMap(A::InverseMap) = A.parent
 
@@ -89,7 +87,6 @@ struct CompositionMap{I,O,Dleft<:AbstractMap,Dright<:AbstractMap} <:  AbstractMa
 	end
 end
 
-@functor CompositionMap
 
 
 inputspace(A::CompositionMap)  = inputspace(A.right)
@@ -108,7 +105,6 @@ struct StackMap{I,O,N,S<:NTuple{N,AbstractMap},II,OI} <:  AbstractMap{I,O}
 	inputindex::II
 	outputindex::OI
 end	
-@functor StackMap
 
 
 

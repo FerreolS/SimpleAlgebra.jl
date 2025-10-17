@@ -17,7 +17,6 @@ function MapMap(inspace::CoordinateSpace,map::AbstractMap)
 end 
 
 
-@functor MapMap
 
 function apply_(A::MapMap, x)  
 	y = similar(x, outputspace(A))

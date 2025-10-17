@@ -7,7 +7,6 @@ struct LinOp1DPolynomial{I,O,X<:Union{AbstractArray{<:AbstractFloat},AbstractFlo
 		new{I,O,X,P}(inputspace,outputspace,x,p)
 end
 
-@functor LinOp1DPolynomial
 
 LinOp1DPolynomial(x,order) = LinOp1DPolynomial(Number,x,order)
 

@@ -7,7 +7,6 @@ struct MapReduceSum{I<:CoordinateSpace,O<:CoordinateSpace,N,F<:Function} <:  Abs
 			new{I,O,N,F}(inputspace, outputspace, index,f)
 end
 
-@functor MapReduceSum
 
 MapReduceSum(sz::NTuple{N,Int}) 			where N 	=  MapReduceSum(Number,sz)
 MapReduceSum(::Type{T},sz::NTuple{N,Int})  	where {T,N} = MapReduceSum(CoordinateSpace(T,sz), identity)

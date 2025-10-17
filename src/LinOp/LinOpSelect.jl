@@ -29,7 +29,6 @@ end
 
 LinOpSelect(selected::BitArray) =LinOpSelect(Number,selected::BitArray) 
 
-@functor LinOpSelect
 
 apply_(A::LinOpSelect, x)  =  x[A.index] #view(x,A.index) 
 

@@ -4,7 +4,6 @@ struct LinOpIdentity{I} <:  AbstractLinOp{I,I}
 	inputspace::I
 end
 
-@functor LinOpIdentity
 
 outputspace(A::LinOpIdentity) = A.inputspace
 
@@ -44,7 +43,6 @@ struct LinOpZero{I} <:  AbstractLinOp{I,I}
 	inputspace::I
 end
 
-@functor LinOpZero
 
 outputspace(A::LinOpZero) = A.inputspace
 
@@ -85,7 +83,6 @@ struct LinOpScale{I<:CoordinateSpace,O<:CoordinateSpace,T} <:  AbstractLinOp{I,O
 	end
 end
 
-@functor LinOpScale
 
 function LinOpScale(inputspace::CoordinateSpace{TI,N}, scale::T1) where {TI,T1,N}  
 	if T1==TI
@@ -160,7 +157,6 @@ struct LinOpDiag{I<:CoordinateSpace,O<:CoordinateSpace,D<:AbstractArray} <:  Abs
 	LinOpDiag(inputspace::I,outputspace::O, diag::D) where {I<:CoordinateSpace,O<:CoordinateSpace,D<:AbstractArray} =  new{I,O,D}(inputspace,outputspace,diag)
 end
 
-@functor LinOpDiag
 
 function LinOpDiag(::Type{TI}, diag::AbstractArray{T1}) where {TI,T1}  
 	sz = size(diag)

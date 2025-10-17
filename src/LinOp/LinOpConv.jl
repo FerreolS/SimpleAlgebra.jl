@@ -5,7 +5,6 @@ struct LinOpConv{I,D<:LinOpDiag,FT<:LinOpDFT} <:  AbstractLinOp{I,I}
 	LinOpConv(insp::I, M::D,F::FT) where {I<:AbstractDomain,D<:LinOpDiag,FT<:LinOpDFT} = new{I,D,FT}(insp,M,F)
 end
 
-@functor LinOpConv
 
 outputspace(A::LinOpConv) = A.inputspace
 

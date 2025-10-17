@@ -11,7 +11,6 @@ struct CostComposition{I,Left<:AbstractCost,Right<:AbstractMap} <:  AbstractCost
 		    return new{I2, Dleft,Dright}(A,B)
 	end
 end
-@functor CostComposition
 
 outputspace(::AbstractCost) = Scalar{Real}()
 inputspace(A::CostComposition)  = inputspace(A.right)
