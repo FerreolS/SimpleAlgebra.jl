@@ -62,13 +62,17 @@ function ChainRulesCore.rrule( ::typeof(apply_),A::LinOp1DPolynomial, v)
 end
  =#
 struct LinOpNFFT{
-        I, O,
+        I,
+        O,
         F,
     } <: AbstractLinOp{I, O}
+
     inputspace::I
     outputspace::O
     plan::F             # plan for forward transform
-    LinOpNFFT(inputspace::I, outputspace::O, plan::F) where {I, O, F} = new{I, O, F}(inputspace, outputspace, plan)
+    dims::Vector{Int}  # dimensions along which the transform is applied
+
+    LinOpNFFT(inputspace::I, outputspace::O, plan::F, dims) where {I <: CoordinateSpace, O <: CoordinateSpace, F} = new{I, O, F}(inputspace, outputspace, plan, dims)
 end
 
 
