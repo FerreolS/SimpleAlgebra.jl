@@ -23,7 +23,7 @@ Base.size(sp::CoordinateSpace{T, N}, d) where {T, N} = d::Integer <= N ? size(sp
 function Base.axes(A::CoordinateSpace{T, N}, d) where {T, N}
     @inline
     return d::Integer <= N ? axes(A)[d] : Base.OneTo(1)
-end
+end 
 
 
 Base.length(sp::S) where {S <: CoordinateSpace} = prod(sp.size)
