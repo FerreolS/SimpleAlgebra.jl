@@ -14,7 +14,7 @@ AdjointLinOp(A::AdjointLinOp) = A.parent
 
 inputspace(A::AdjointLinOp)  = outputspace(A.parent)
 outputspace(A::AdjointLinOp) = inputspace(A.parent)
-
+ 
 
 apply_(A::AdjointLinOp, v) = apply_adjoint(A.parent,v)
 
