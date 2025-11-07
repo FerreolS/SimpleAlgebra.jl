@@ -8,6 +8,7 @@ import InverseFunctions: inverse
 using KernelAbstractions
 using ArrayTools
 using StaticArrays
+using LinearAlgebra
 
 export AbstractMap, AbstractCost
 export AbstractDomain,

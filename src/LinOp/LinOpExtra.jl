@@ -129,7 +129,9 @@ end
     I = @index(Global, Cartesian)
     I1 = CartesianIndex(I.I[1:(dims - 1)])
     I2 = CartesianIndex(I.I[dims:end])
-    view(Y, I1, colons(Val(ndims(outputspace(A))))..., I2) .= A * view(X, I1, colons(Val(ndims(inputspace(A))))..., I2)
+    #view(Y, I1, colons(Val(ndims(outputspace(A))))..., I2) .= A * view(X, I1, colons(Val(ndims(inputspace(A))))..., I2)
+    apply!(view(Y, I1, colons(Val(ndims(outputspace(A))))..., I2), A, view(X, I1, colons(Val(ndims(inputspace(A))))..., I2))
+
     #Y[I1, .., I2] .= A * X[I1, .., I2]
 end
 
